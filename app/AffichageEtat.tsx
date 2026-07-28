@@ -16,14 +16,29 @@ import { TEXTE_GOUVERNANCE } from './composants/NoteGouvernance'
  * s'abonne aux changements de `etat_chaine` via Supabase Realtime avec la clé anon.
  * Aucun rechargement, aucun polling.
  */
+/**
+ * État affiché tant qu'aucune donnée n'a pu être lue. Neutre, jamais vert :
+ * une base injoignable ne doit pas se lire comme « tout va bien ».
+ */
+const PRESENTATION_INDISPONIBLE = {
+  libelle: 'État indisponible',
+  descriptif:
+    "Le service d'affichage est momentanément injoignable. Cette page ne reflète pas l'état réel de la chaîne : renseignez-vous auprès du poste pilote.",
+  couleur: '#98a0a8',
+  halo: 'rgba(152,160,168,.16)',
+}
+
 export default function AffichageEtat({
   etatInitial,
+  etatDisponibleInitial,
   configurationManquante,
 }: {
   etatInitial: EtatChaine
+  etatDisponibleInitial: boolean
   configurationManquante: boolean
 }) {
   const [etat, setEtat] = useState<EtatChaine>(etatInitial)
+  const [etatDisponible, setEtatDisponible] = useState(etatDisponibleInitial)
   const [enDirect, setEnDirect] = useState(false)
 
   useEffect(() => {
@@ -38,7 +53,10 @@ export default function AffichageEtat({
         .select('*')
         .eq('id', 1)
         .maybeSingle()
-      if (!annule && !error && data) setEtat(normaliserEtat(data))
+      if (!annule && !error && data) {
+        setEtat(normaliserEtat(data))
+        setEtatDisponible(true)
+      }
     }
 
     const canal = supabase
@@ -51,6 +69,7 @@ export default function AffichageEtat({
           const nouvelle = charge.new
           if (nouvelle && typeof nouvelle === 'object' && 'trafic' in nouvelle) {
             setEtat(normaliserEtat(nouvelle))
+            setEtatDisponible(true)
           } else {
             void recharger()
           }
@@ -80,7 +99,9 @@ export default function AffichageEtat({
     }
   }, [])
 
-  const presentation = PRESENTATION_TRAFIC[etat.trafic]
+  const presentation = etatDisponible
+    ? PRESENTATION_TRAFIC[etat.trafic]
+    : PRESENTATION_INDISPONIBLE
   const horodatage = formaterHorodatage(etat.maj_le)
 
   // Une liste vide vaut « toutes disponibles » : on n'affiche jamais un bloc
@@ -141,7 +162,15 @@ export default function AffichageEtat({
           Analyses
         </h2>
 
-        {toutesDisponibles ? (
+        {!etatDisponible ? (
+          <div className="all-ok">
+            <div className="big-dot" style={{ background: '#98a0a8', boxShadow: 'none' }} aria-hidden="true" />
+            <div className="txt">
+              <strong>Information non disponible</strong>
+              <span>L&apos;état des analyses n&apos;a pas pu être chargé.</span>
+            </div>
+          </div>
+        ) : toutesDisponibles ? (
           <div className="all-ok">
             <div className="big-dot" aria-hidden="true" />
             <div className="txt">
@@ -165,7 +194,7 @@ export default function AffichageEtat({
       </section>
 
       {/* ── Message libre, seulement s'il est renseigné ── */}
-      {etat.message.trim() ? (
+      {etatDisponible && etat.message.trim() ? (
         <div className="msg" aria-live="polite">
           <span className="ic" aria-hidden="true" />
           <div className="texte">{etat.message}</div>
