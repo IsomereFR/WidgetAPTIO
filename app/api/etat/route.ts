@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic'
 // Bornes de saisie : évitent qu'un envoi malformé ou volumineux n'atteigne la base.
 const MAX_ANALYSES = 40
 const MAX_LONGUEUR_ANALYSE = 200
+const MAX_LONGUEUR_REPRISE = 120
 const MAX_LONGUEUR_COMMENTAIRE = 1000
 const MAX_LONGUEUR_MESSAGE = 600
 
@@ -86,10 +87,13 @@ export async function POST(requete: Request) {
       .filter((entree): entree is Record<string, unknown> => typeof entree === 'object' && entree !== null)
       .map((entree) => ({
         analyse: texte(entree.analyse, MAX_LONGUEUR_ANALYSE),
+        reprise: texte(entree.reprise, MAX_LONGUEUR_REPRISE),
         commentaire: texte(entree.commentaire, MAX_LONGUEUR_COMMENTAIRE),
       }))
       // Une ligne entièrement vide n'a pas de sens à l'affichage : on l'écarte.
-      .filter((entree) => entree.analyse !== '' || entree.commentaire !== '')
+      .filter(
+        (entree) => entree.analyse !== '' || entree.reprise !== '' || entree.commentaire !== '',
+      )
 
     if (analyses.length === 0) {
       return NextResponse.json(

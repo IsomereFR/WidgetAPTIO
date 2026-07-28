@@ -114,10 +114,51 @@ header.top {
 }
 
 /* La pulsation ne s'active qu'une fois l'abonnement temps réel établi. */
-.live[data-actif='true'] .dotpulse {
+.live[data-liaison='direct'] .dotpulse {
   background: var(--sauge);
   box-shadow: 0 0 0 0 rgba(111, 144, 128, 0.5);
   animation: pulse 2s infinite;
+}
+
+/* Repli : le temps réel n'a pas abouti, la page se rafraîchit périodiquement.
+   Signalé en ambre pour que personne ne croie à une liaison instantanée. */
+.live[data-liaison='repli'] {
+  border-color: color-mix(in srgb, var(--ambre) 45%, var(--brume));
+  color: #7a5a1c;
+}
+
+.live[data-liaison='repli'] .dotpulse {
+  background: var(--ambre);
+}
+
+/* Lien discret vers l'espace pilote. Protégé par mot de passe : le rendre
+   visible ne l'ouvre pas, cela évite juste d'avoir à retenir l'URL. */
+.lien-pilote {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--marine);
+  background: var(--blanc);
+  border: 1px solid var(--brume);
+  padding: 6px 12px;
+  border-radius: 999px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.lien-pilote:hover {
+  border-color: var(--marine);
+  background: var(--creme);
+}
+
+.entete-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 @keyframes pulse {
@@ -293,6 +334,38 @@ header.top {
   margin-top: 5px;
   padding-left: 17px;
   white-space: pre-wrap;
+}
+
+/* Reprise estimée : l'information la plus attendue par les services,
+   donc distinguée du commentaire plutôt que noyée dedans. */
+.indispo .reprise {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  padding-left: 17px;
+}
+
+.reprise-etiquette {
+  font-family: var(--font-titre);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  background: color-mix(in srgb, var(--terracotta) 10%, var(--blanc));
+  border: 1px solid color-mix(in srgb, var(--terracotta) 28%, transparent);
+  border-radius: 999px;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+
+.reprise-valeur {
+  font-family: var(--font-titre);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--encre);
 }
 
 /* ── Message ──────────────────────────────────────────────────────────────── */
@@ -665,28 +738,119 @@ textarea {
   border: 0;
 }
 
-/* ── Petits écrans (valeurs de la maquette) ───────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   Responsive
+   La maquette ne prévoyait qu'un seul point de rupture (560 px), laissant toute
+   la zone intermédiaire — tablettes, fenêtres réduites — sans traitement. Les
+   tailles sont donc rendues fluides par clamp(), plafonnées EXACTEMENT aux
+   valeurs de la maquette : au-delà d'environ 840 px le rendu lui est identique.
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 560px) {
-  .status-text .state {
-    font-size: 34px;
-  }
+body {
+  padding: clamp(16px, 3vw, 32px) clamp(12px, 2.5vw, 20px) clamp(32px, 6vw, 60px);
+}
 
+.titles h1 {
+  font-size: clamp(1.15rem, 0.9rem + 1.5vw, 26px);
+}
+
+.titles p {
+  font-size: clamp(12px, 11px + 0.3vw, 13.5px);
+}
+
+.status-text .state {
+  font-size: clamp(1.75rem, 1rem + 3.6vw, 44px);
+}
+
+.status-text .desc {
+  font-size: clamp(13.5px, 12px + 0.4vw, 15px);
+}
+
+.hero {
+  padding: clamp(20px, 1rem + 2.2vw, 34px);
+}
+
+.card {
+  padding: clamp(18px, 0.9rem + 1.6vw, 26px) clamp(16px, 0.8rem + 2.2vw, 30px);
+}
+
+.status-line {
+  gap: clamp(14px, 2vw, 20px);
+}
+
+.status-dot {
+  width: clamp(26px, 1rem + 1.6vw, 38px);
+  height: clamp(26px, 1rem + 1.6vw, 38px);
+}
+
+.logo-reserve img {
+  height: clamp(32px, 1.5rem + 1.4vw, 44px);
+}
+
+/* En-tête : passe en colonne dès que la ligne ne tient plus. */
+@media (max-width: 700px) {
   header.top {
     flex-direction: column;
     align-items: flex-start;
+    gap: 14px;
   }
 
-  .titles h1 {
+  .entete-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* Pied : les deux colonnes s'empilent avant de devenir illisibles. */
+@media (max-width: 720px) {
+  footer.foot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  footer.foot .note {
+    max-width: none;
+  }
+}
+
+/* Très petits écrans : on récupère l'indentation au profit du texte. */
+@media (max-width: 400px) {
+  .status-line {
+    align-items: flex-start;
+  }
+
+  .indispo .reprise,
+  .indispo .note {
+    padding-left: 0;
+  }
+}
+
+/* Grands écrans : affichage mural, « lisible de loin » (§4.4 du PRD). */
+@media (min-width: 1500px) {
+  .wrap {
+    max-width: 1180px;
+  }
+
+  .status-text .state {
+    font-size: 60px;
+  }
+
+  .status-dot {
+    width: 52px;
+    height: 52px;
+  }
+
+  .all-ok .txt strong {
     font-size: 22px;
   }
 
-  .hero {
-    padding: 24px 20px;
+  .indispo .name {
+    font-size: 18px;
   }
 
-  .card {
-    padding: 20px 18px;
+  .indispo .note,
+  .reprise-valeur {
+    font-size: 16px;
   }
 }
 
