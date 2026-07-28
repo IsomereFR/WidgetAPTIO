@@ -34,7 +34,7 @@ export default function FormulairePilote({
   const [analyses, setAnalyses] = useState<AnalyseIndisponible[]>(
     etatInitial.analyses_indisponibles.length > 0
       ? etatInitial.analyses_indisponibles
-      : [{ analyse: '', commentaire: '' }],
+      : [{ analyse: '', reprise: '', commentaire: '' }],
   )
   const [message, setMessage] = useState(etatInitial.message)
   const [auteur, setAuteur] = useState(mode === 'pin' ? etatInitial.maj_par : '')
@@ -130,13 +130,13 @@ export default function FormulairePilote({
   }
 
   const ajouterAnalyse = () => {
-    setAnalyses((precedent) => [...precedent, { analyse: '', commentaire: '' }])
+    setAnalyses((precedent) => [...precedent, { analyse: '', reprise: '', commentaire: '' }])
   }
 
   const retirerAnalyse = (index: number) => {
     setAnalyses((precedent) => {
       const restant = precedent.filter((_, i) => i !== index)
-      return restant.length > 0 ? restant : [{ analyse: '', commentaire: '' }]
+      return restant.length > 0 ? restant : [{ analyse: '', reprise: '', commentaire: '' }]
     })
   }
 
@@ -408,11 +408,30 @@ export default function FormulairePilote({
                     />
                   </label>
 
+                  <label className="champ">
+                    <span className="champ-intitule">
+                      Reprise estimée
+                      <span className="champ-aide">
+                        Une heure, une date, ou une incertitude assumée : « vers 14h »,
+                        « 29/07 matin », « en cours d&apos;évaluation ».
+                      </span>
+                    </span>
+                    <input
+                      type="text"
+                      value={entree.reprise}
+                      onChange={(evenement) =>
+                        modifierAnalyse(index, 'reprise', evenement.target.value)
+                      }
+                      maxLength={120}
+                      placeholder="vers 14h"
+                    />
+                  </label>
+
                   <label className="champ" style={{ marginBottom: 0 }}>
                     <span className="champ-intitule">
                       Précision
                       <span className="champ-aide">
-                        Motif, automate concerné, reprise estimée, conduite à tenir.
+                        Motif, automate concerné, conduite à tenir.
                       </span>
                     </span>
                     <textarea

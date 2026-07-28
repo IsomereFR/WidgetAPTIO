@@ -13,6 +13,14 @@ export function estTrafic(valeur: unknown): valeur is Trafic {
 
 export type AnalyseIndisponible = {
   analyse: string
+  /**
+   * Reprise estimée. Champ texte libre volontairement, et non un sélecteur
+   * de date : sur le terrain la réponse est tantôt une heure (« vers 14h »),
+   * tantôt une date (« demain matin »), tantôt une incertitude assumée
+   * (« en cours d'évaluation »). Un sélecteur de date forcerait à inventer
+   * une précision qu'on n'a pas.
+   */
+  reprise: string
   commentaire: string
 }
 
@@ -83,6 +91,9 @@ export function normaliserEtat(ligne: unknown): EtatChaine {
       .filter((entree): entree is Record<string, unknown> => typeof entree === 'object' && entree !== null)
       .map((entree) => ({
         analyse: typeof entree.analyse === 'string' ? entree.analyse : '',
+        // `reprise` est arrivée après la mise en service : les lignes déjà
+        // publiées ne l'ont pas, on retombe sur une chaîne vide sans casser.
+        reprise: typeof entree.reprise === 'string' ? entree.reprise : '',
         commentaire: typeof entree.commentaire === 'string' ? entree.commentaire : '',
       }))
   }

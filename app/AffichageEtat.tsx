@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState, type CSSProperties } from 'react'
 
 import { formaterHorodatage } from '@/lib/format'
@@ -20,6 +21,29 @@ import { TEXTE_GOUVERNANCE } from './composants/NoteGouvernance'
  * État affiché tant qu'aucune donnée n'a pu être lue. Neutre, jamais vert :
  * une base injoignable ne doit pas se lire comme « tout va bien ».
  */
+/**
+ * État de la liaison temps réel. Trois valeurs distinctes, parce que
+ * « je me connecte » et « je n'y arrive pas » ne doivent pas se ressembler :
+ * un « Connexion… » éternel laisse croire que la page est à jour.
+ */
+type EtatLiaison = 'connexion' | 'direct' | 'repli'
+
+const PRESENTATION_LIAISON: Record<EtatLiaison, { libelle: string; titre: string }> = {
+  connexion: {
+    libelle: 'Connexion…',
+    titre: 'Établissement de la liaison temps réel',
+  },
+  direct: {
+    libelle: 'Actualisation auto',
+    titre: 'Liaison temps réel active : la page se met à jour instantanément',
+  },
+  repli: {
+    libelle: 'Actualisation différée',
+    titre:
+      "Liaison temps réel indisponible. La page se rafraîchit toutes les 15 secondes : un changement peut mettre jusqu'à 15 s à apparaître.",
+  },
+}
+
 const PRESENTATION_INDISPONIBLE = {
   libelle: 'État indisponible',
   descriptif:
@@ -39,7 +63,7 @@ export default function AffichageEtat({
 }) {
   const [etat, setEtat] = useState<EtatChaine>(etatInitial)
   const [etatDisponible, setEtatDisponible] = useState(etatDisponibleInitial)
-  const [enDirect, setEnDirect] = useState(false)
+  const [liaison, setLiaison] = useState<EtatLiaison>('connexion')
 
   useEffect(() => {
     const supabase = supabaseNavigateur()
@@ -75,12 +99,21 @@ export default function AffichageEtat({
           }
         },
       )
-      .subscribe((statut) => {
+      .subscribe((statut, erreur) => {
         if (annule) return
-        setEnDirect(statut === 'SUBSCRIBED')
-        // À la (re)connexion, on resynchronise : cela rattrape tout changement
-        // survenu pendant une coupure réseau.
-        if (statut === 'SUBSCRIBED') void recharger()
+
+        // Trace de diagnostic : sans elle, un canal qui n'aboutit pas est
+        // indiscernable d'un canal qui met simplement du temps à s'établir.
+        console.info('[APTIO] canal temps réel :', statut, erreur ?? '')
+
+        if (statut === 'SUBSCRIBED') {
+          setLiaison('direct')
+          // À la (re)connexion, on resynchronise : cela rattrape tout changement
+          // survenu pendant une coupure réseau.
+          void recharger()
+        } else if (statut === 'CHANNEL_ERROR' || statut === 'TIMED_OUT' || statut === 'CLOSED') {
+          setLiaison('repli')
+        }
       })
 
     // Un écran mural peut rester ouvert des heures : on resynchronise aussi
@@ -91,13 +124,47 @@ export default function AffichageEtat({
     document.addEventListener('visibilitychange', surReveil)
     window.addEventListener('online', surReveil)
 
+    // Filet de sécurité : si le canal n'a pas abouti au bout de 8 secondes,
+    // on cesse d'afficher « Connexion… » indéfiniment.
+    const delaiBascule = window.setTimeout(() => {
+      if (!annule) setLiaison((precedent) => (precedent === 'connexion' ? 'repli' : precedent))
+    }, 8000)
+
     return () => {
       annule = true
+      window.clearTimeout(delaiBascule)
       document.removeEventListener('visibilitychange', surReveil)
       window.removeEventListener('online', surReveil)
       void supabase.removeChannel(canal)
     }
   }, [])
+
+  // Repli : tant que le temps réel n'est pas établi, on relit périodiquement.
+  // Le PRD privilégie l'abonnement au polling, mais une page qui ne se met
+  // jamais à jour serait pire que tout — ce filet ne tourne QUE hors direct.
+  useEffect(() => {
+    if (liaison === 'direct') return
+    const supabase = supabaseNavigateur()
+    if (!supabase) return
+
+    let annule = false
+    const intervalle = window.setInterval(async () => {
+      const { data, error } = await supabase
+        .from('etat_chaine')
+        .select('*')
+        .eq('id', 1)
+        .maybeSingle()
+      if (!annule && !error && data) {
+        setEtat(normaliserEtat(data))
+        setEtatDisponible(true)
+      }
+    }, 15000)
+
+    return () => {
+      annule = true
+      window.clearInterval(intervalle)
+    }
+  }, [liaison])
 
   const presentation = etatDisponible
     ? PRESENTATION_TRAFIC[etat.trafic]
@@ -113,14 +180,19 @@ export default function AffichageEtat({
     <div className="wrap">
       <Entete
         indicateur={
-          <span
-            className="live"
-            data-actif={enDirect}
-            title={enDirect ? 'Mise à jour automatique active' : 'Connexion au flux temps réel…'}
-          >
-            <span className="dotpulse" aria-hidden="true" />
-            {enDirect ? 'Actualisation auto' : 'Connexion…'}
-          </span>
+          <div className="entete-actions">
+            <span
+              className="live"
+              data-liaison={liaison}
+              title={PRESENTATION_LIAISON[liaison].titre}
+            >
+              <span className="dotpulse" aria-hidden="true" />
+              {PRESENTATION_LIAISON[liaison].libelle}
+            </span>
+            <Link href="/pilote" className="lien-pilote">
+              Espace pilote
+            </Link>
+          </div>
         }
       />
 
@@ -186,6 +258,12 @@ export default function AffichageEtat({
                   <span className="pin" aria-hidden="true" />
                   {entree.analyse || 'Analyse non nommée'}
                 </div>
+                {entree.reprise ? (
+                  <div className="reprise">
+                    <span className="reprise-etiquette">Reprise estimée</span>
+                    <span className="reprise-valeur">{entree.reprise}</span>
+                  </div>
+                ) : null}
                 {entree.commentaire ? <div className="note">{entree.commentaire}</div> : null}
               </li>
             ))}
