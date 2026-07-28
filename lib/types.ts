@@ -44,7 +44,7 @@ export const PRESENTATION_TRAFIC: Record<
 > = {
   normal: {
     libelle: 'Trafic normal',
-    descriptif: 'Chaîne nominale, délais de rendu habituels.',
+    descriptif: 'Délais de rendu des résultats habituels.',
     couleur: '#6F9080',
     halo: 'rgba(111,144,128,.14)',
   },
