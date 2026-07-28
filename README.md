@@ -79,9 +79,9 @@ Project Settings → API).
 | `NEXT_PUBLIC_SUPABASE_URL` | URL du projet Supabase | Non |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clé publique, lecture seule via RLS | Non |
 | `SUPABASE_SERVICE_ROLE_KEY` | Écriture serveur | **Oui** |
-| `ACCES_PILOTE` | `auth` ou `pin` | Non |
+| `ACCES_PILOTE` | `pin` (retenu) ou `auth` | Non |
+| `PILOTE_PIN` | Mot de passe unique (mode `pin`) | **Oui** |
 | `PILOTE_EMAILS` | Adresses autorisées (mode `auth`) | Non |
-| `PILOTE_PIN` | Code partagé (mode `pin`) | **Oui** |
 
 > Le PRD nomme ces variables `SUPABASE_URL` / `SUPABASE_ANON_KEY`. Elles portent
 > ici le préfixe `NEXT_PUBLIC_` imposé par Next.js pour les valeurs que le
@@ -101,13 +101,34 @@ build), `npm run typecheck` (vérification TypeScript).
 
 ---
 
-## Choisir le mode d'accès pilote (§9.1 du PRD)
+## Mode d'accès pilote (§9.1 du PRD)
 
 Le point d'arbitrage laissé ouvert par le PRD est **implémenté dans les deux
 sens**. Tout le mécanisme tient dans un seul fichier, [`lib/acces-pilote.ts`](lib/acces-pilote.ts) :
 basculer d'un mode à l'autre ne demande **aucune modification de code**.
 
-### Mode `auth` — lien magique e-mail (recommandé)
+### Mode `pin` — mot de passe unique · **retenu**
+
+```
+ACCES_PILOTE=pin
+PILOTE_PIN=<mot de passe choisi>
+```
+
+La page `/pilote` demande le mot de passe, puis présente le formulaire de
+publication. Le pilote renseigne un champ « poste ou initiales » qui alimente
+`maj_par`.
+
+**Conséquence à assumer** : l'auteur est **déclaratif**, pas vérifié. Le mot de
+passe étant partagé, la seule trace de qui a publié est ce que la personne a
+bien voulu taper. Si un jour vous devez répondre à « qui a annoncé cet état ? »
+lors d'un audit, cette réponse ne sera pas opposable — c'est le compromis
+accepté en échange de la simplicité.
+
+Le mot de passe est vérifié **côté serveur**, par comparaison à durée constante,
+au moment de la publication et non à la saisie : connaître l'écran ne suffit pas,
+il faut le mot de passe pour que l'écriture aboutisse.
+
+### Mode `auth` — lien magique e-mail · alternative
 
 ```
 ACCES_PILOTE=auth
@@ -115,7 +136,8 @@ PILOTE_EMAILS=pilote1@bioxa.fr,pilote2@bioxa.fr
 ```
 
 Le pilote saisit son adresse, reçoit un lien de connexion, et publie. `maj_par`
-est renseigné automatiquement avec son adresse — traçabilité nominative.
+est renseigné automatiquement avec son adresse — traçabilité nominative, celle
+que recommande le §9.1.a du PRD.
 
 Côté Supabase (Authentication → URL Configuration), ajoutez en *Redirect URL* :
 `https://<votre-domaine>/auth/callback`. Créez les comptes pilotes dans
@@ -124,16 +146,10 @@ Authentication → Users : l'application n'autorise pas l'auto-inscription.
 La liste blanche est vérifiée **côté serveur** : une personne authentifiée dont
 l'adresse n'est pas dans `PILOTE_EMAILS` reçoit un `401`.
 
-### Mode `pin` — code partagé
+### Bascule
 
-```
-ACCES_PILOTE=pin
-PILOTE_PIN=<code choisi>
-```
-
-La page `/pilote` demande le code, et le pilote renseigne un champ « poste ou
-initiales » qui alimente `maj_par`. Plus simple à déployer, mais l'auteur est
-déclaratif et non vérifié.
+Changer `ACCES_PILOTE` dans Vercel puis redéployer suffit. Aucune donnée n'est
+perdue : le mode ne concerne que le contrôle d'accès, pas le contenu publié.
 
 ---
 

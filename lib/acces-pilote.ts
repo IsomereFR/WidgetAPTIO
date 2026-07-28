@@ -21,12 +21,23 @@ import { supabaseSessionServeur } from './supabase-serveur'
  *
  *  Aucun autre fichier n'a besoin d'être modifié : la page /pilote et la route
  *  d'écriture consomment uniquement ce module.
+ *
+ *  ARBITRAGE RETENU : « pin ». Un mot de passe unique, partagé par les postes
+ *  qui tiennent la chaîne. Conséquence à assumer : `maj_par` n'est plus une
+ *  identité vérifiée mais un champ déclaratif (« poste ou initiales ») saisi
+ *  par le pilote. Le mode « auth » reste entièrement fonctionnel si vous
+ *  souhaitez plus tard une traçabilité nominative : il suffit de changer
+ *  ACCES_PILOTE et de renseigner PILOTE_EMAILS.
  */
 
 export type ModeAccesPilote = 'auth' | 'pin'
 
-/** Mode par défaut : « auth », recommandé au §9.1.a du PRD pour la traçabilité. */
-const MODE_PAR_DEFAUT: ModeAccesPilote = 'auth'
+/**
+ * Mode par défaut : « pin », conformément à l'arbitrage retenu.
+ * Si la variable est absente ET que PILOTE_PIN l'est aussi, la route d'écriture
+ * refuse tout (401) : l'absence de configuration ne laisse jamais l'accès ouvert.
+ */
+const MODE_PAR_DEFAUT: ModeAccesPilote = 'pin'
 
 export function modeAccesPilote(): ModeAccesPilote {
   const brut = (process.env.ACCES_PILOTE || '').trim().toLowerCase()
