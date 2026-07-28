@@ -17,7 +17,7 @@ export default function Entete({
       <div className="brand">
         <span className="logo-reserve">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-bioxa.jpg" alt="BIOXA Laboratoire" />
+          <img src="/logo-bioxa.png" alt="BIOXA Laboratoire" />
         </span>
         <div className="titles">
           <h1>État de production du plateau technique</h1>
