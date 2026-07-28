@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+build/
+.DS_Store
+
+# Variables d'environnement : ne JAMAIS committer de clé réelle.
+.env
+.env.local
+.env*.local
+
+.vercel
+*.tsbuildinfo
+next-env.d.ts

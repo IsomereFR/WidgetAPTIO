@@ -1,0 +1,633 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DA BIOXA · tokens (§7 du PRD)
+   Crème, anthracite, marine, brume. Manrope pour les titres, Inter pour le corps.
+   Épuré, grand format, lisible de loin. Aucun smiley.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --creme: #f7f2ea;
+  --blanc: #ffffff;
+  --anthracite: #1e2933;
+  --marine: #14304a;
+  --brume: #d5dbdf;
+
+  --vert-sauge: #6f9080;
+  --ambre: #d7a24a;
+  --terracotta: #c0623f;
+
+  --anthracite-doux: rgba(30, 41, 51, 0.62);
+  --brume-douce: rgba(213, 219, 223, 0.55);
+
+  --rayon: 14px;
+  --rayon-large: 20px;
+  --ombre: 0 1px 2px rgba(20, 48, 74, 0.04), 0 8px 28px rgba(20, 48, 74, 0.06);
+
+  --police-titre: var(--police-manrope), 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --police-corps: var(--police-inter), 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--creme);
+  color: var(--anthracite);
+  font-family: var(--police-corps);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--police-titre);
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  margin: 0;
+  color: var(--marine);
+}
+
+/* ── Ossature ─────────────────────────────────────────────────────────────── */
+
+.page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.contenu {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ── En-tête : logo sur réserve blanche + titre ───────────────────────────── */
+
+.entete {
+  background: var(--blanc);
+  border-bottom: 1px solid var(--brume);
+}
+
+.entete-interieur {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.reserve-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--blanc);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.reserve-logo img {
+  display: block;
+  height: 46px;
+  width: auto;
+}
+
+.entete-titre {
+  font-size: clamp(1.45rem, 1.1rem + 1.4vw, 2rem);
+  line-height: 1.2;
+}
+
+.entete-sous-titre {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+  color: var(--anthracite-doux);
+}
+
+/* ── Corps ────────────────────────────────────────────────────────────────── */
+
+main.corps {
+  flex: 1;
+  padding: 40px 0 56px;
+}
+
+.carte {
+  background: var(--blanc);
+  border: 1px solid var(--brume);
+  border-radius: var(--rayon-large);
+  box-shadow: var(--ombre);
+  padding: 34px 36px;
+}
+
+.carte + .carte {
+  margin-top: 22px;
+}
+
+.carte-intitule {
+  font-family: var(--police-titre);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--anthracite-doux);
+  margin: 0 0 18px;
+}
+
+/* ── Bloc statut, grand format ────────────────────────────────────────────── */
+
+.statut {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.pastille {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--couleur-statut);
+  box-shadow: 0 0 0 9px color-mix(in srgb, var(--couleur-statut) 16%, transparent);
+}
+
+.statut-libelle {
+  font-family: var(--police-titre);
+  font-size: clamp(2rem, 1.4rem + 2.6vw, 3.1rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.028em;
+  color: var(--couleur-statut);
+  margin: 0;
+}
+
+.statut-descriptif {
+  margin: 8px 0 0;
+  font-size: 1.12rem;
+  color: var(--anthracite-doux);
+}
+
+/* ── Bloc analyses ────────────────────────────────────────────────────────── */
+
+.analyses-toutes {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 1.28rem;
+  font-weight: 600;
+  font-family: var(--police-titre);
+  color: var(--marine);
+}
+
+.puce-disponible {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--vert-sauge);
+  flex-shrink: 0;
+}
+
+.liste-analyses {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.analyse {
+  border: 1px solid var(--brume);
+  border-left: 5px solid var(--terracotta);
+  border-radius: var(--rayon);
+  background: var(--creme);
+  padding: 18px 20px;
+}
+
+.analyse-nom {
+  font-family: var(--police-titre);
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: var(--marine);
+  margin: 0;
+}
+
+.analyse-commentaire {
+  margin: 6px 0 0;
+  font-size: 1rem;
+  color: var(--anthracite);
+  white-space: pre-wrap;
+}
+
+/* ── Message libre ────────────────────────────────────────────────────────── */
+
+.message {
+  font-size: 1.1rem;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+/* ── Pied de page ─────────────────────────────────────────────────────────── */
+
+.pied {
+  border-top: 1px solid var(--brume);
+  background: var(--blanc);
+  padding: 26px 0 34px;
+}
+
+.maj {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--marine);
+  margin: 0;
+}
+
+.maj-vide {
+  font-weight: 500;
+  color: var(--anthracite-doux);
+}
+
+.gouvernance {
+  margin: 12px 0 0;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--anthracite-doux);
+  max-width: 72ch;
+}
+
+/* ── Indicateur temps réel ────────────────────────────────────────────────── */
+
+.direct {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--anthracite-doux);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.direct-point {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--brume);
+  transition: background 240ms ease;
+}
+
+.direct[data-actif='true'] .direct-point {
+  background: var(--vert-sauge);
+  animation: pulsation 2.4s ease-in-out infinite;
+}
+
+@keyframes pulsation {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ── Formulaire pilote ────────────────────────────────────────────────────── */
+
+.champ {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.champ-intitule {
+  display: block;
+  font-family: var(--police-titre);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--marine);
+  margin-bottom: 8px;
+}
+
+.champ-aide {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 400;
+  color: var(--anthracite-doux);
+  margin-top: 3px;
+}
+
+input[type='text'],
+input[type='email'],
+input[type='password'],
+textarea {
+  width: 100%;
+  font-family: var(--police-corps);
+  font-size: 1rem;
+  color: var(--anthracite);
+  background: var(--blanc);
+  border: 1px solid var(--brume);
+  border-radius: var(--rayon);
+  padding: 11px 14px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: none;
+  border-color: var(--marine);
+  box-shadow: 0 0 0 3px rgba(20, 48, 74, 0.14);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 76px;
+  line-height: 1.55;
+}
+
+/* Choix de trafic : trois boutons exclusifs */
+
+.choix-trafic {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.option-trafic {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px 18px;
+  border: 1.5px solid var(--brume);
+  border-radius: var(--rayon);
+  background: var(--blanc);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--police-titre);
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--anthracite);
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.option-trafic:hover {
+  border-color: color-mix(in srgb, var(--couleur-option) 55%, var(--brume));
+}
+
+.option-trafic[aria-pressed='true'] {
+  border-color: var(--couleur-option);
+  background: color-mix(in srgb, var(--couleur-option) 9%, var(--blanc));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--couleur-option) 16%, transparent);
+  color: var(--couleur-option);
+}
+
+.option-pastille {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--couleur-option);
+  flex-shrink: 0;
+}
+
+/* Interrupteur disponibilité */
+
+.bascule {
+  display: inline-flex;
+  padding: 5px;
+  gap: 5px;
+  background: var(--creme);
+  border: 1px solid var(--brume);
+  border-radius: 999px;
+}
+
+.bascule-option {
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-family: var(--police-titre);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--anthracite-doux);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.bascule-option[aria-pressed='true'] {
+  background: var(--marine);
+  color: var(--blanc);
+}
+
+/* Lignes d'analyses éditables */
+
+.ligne-analyse {
+  border: 1px solid var(--brume);
+  border-radius: var(--rayon);
+  background: var(--creme);
+  padding: 16px 18px;
+}
+
+.ligne-analyse + .ligne-analyse {
+  margin-top: 12px;
+}
+
+.ligne-analyse-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.ligne-analyse-numero {
+  font-family: var(--police-titre);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--anthracite-doux);
+}
+
+/* Boutons */
+
+.bouton {
+  font-family: var(--police-titre);
+  font-weight: 700;
+  border-radius: var(--rayon);
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, opacity 160ms ease;
+  border: 1px solid transparent;
+}
+
+.bouton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.bouton-principal {
+  background: var(--marine);
+  color: var(--blanc);
+  font-size: 1.05rem;
+  padding: 14px 30px;
+}
+
+.bouton-principal:hover:not(:disabled) {
+  background: #0f2438;
+}
+
+.bouton-secondaire {
+  background: var(--blanc);
+  border-color: var(--brume);
+  color: var(--marine);
+  font-size: 0.92rem;
+  padding: 9px 16px;
+}
+
+.bouton-secondaire:hover:not(:disabled) {
+  border-color: var(--marine);
+}
+
+.bouton-retrait {
+  background: transparent;
+  border-color: transparent;
+  color: var(--terracotta);
+  font-size: 0.88rem;
+  padding: 6px 10px;
+}
+
+.bouton-retrait:hover:not(:disabled) {
+  border-color: var(--terracotta);
+}
+
+/* Encarts d'information */
+
+.encart {
+  border-radius: var(--rayon);
+  padding: 15px 18px;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  border: 1px solid;
+}
+
+.encart-consigne {
+  background: color-mix(in srgb, var(--ambre) 12%, var(--blanc));
+  border-color: color-mix(in srgb, var(--ambre) 48%, transparent);
+  color: #6d4c14;
+  font-weight: 600;
+}
+
+.encart-succes {
+  background: color-mix(in srgb, var(--vert-sauge) 13%, var(--blanc));
+  border-color: color-mix(in srgb, var(--vert-sauge) 48%, transparent);
+  color: #2f4a3c;
+  font-weight: 600;
+}
+
+.encart-erreur {
+  background: color-mix(in srgb, var(--terracotta) 11%, var(--blanc));
+  border-color: color-mix(in srgb, var(--terracotta) 46%, transparent);
+  color: #7a3320;
+  font-weight: 600;
+}
+
+.encart-neutre {
+  background: var(--creme);
+  border-color: var(--brume);
+  color: var(--anthracite);
+}
+
+/* Page pilote : ossature */
+
+.pilote-entete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+}
+
+.pilote-titre {
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.05rem);
+}
+
+.lien-lecture {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--marine);
+}
+
+.bloc-connexion {
+  max-width: 460px;
+  margin: 8px auto 0;
+}
+
+.separateur {
+  height: 1px;
+  background: var(--brume);
+  border: none;
+  margin: 26px 0;
+}
+
+.actions-publication {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.visuellement-masque {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Adaptations petits écrans ────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .carte {
+    padding: 24px 20px;
+  }
+
+  .statut {
+    gap: 18px;
+  }
+
+  .pastille {
+    width: 54px;
+    height: 54px;
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--couleur-statut) 16%, transparent);
+  }
+
+  .entete-interieur {
+    gap: 14px;
+  }
+
+  .reserve-logo img {
+    height: 36px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
