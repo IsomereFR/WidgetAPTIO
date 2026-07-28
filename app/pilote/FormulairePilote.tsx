@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 
@@ -28,6 +29,8 @@ export default function FormulairePilote({
   mode: ModeAcces
   etatInitial: EtatChaine
 }) {
+  const routeur = useRouter()
+
   // ── Formulaire, pré-rempli avec l'état courant ────────────────────────────
   const [trafic, setTrafic] = useState<Trafic>(etatInitial.trafic)
   const [toutesDisponibles, setToutesDisponibles] = useState(etatInitial.analyses_toutes_disponibles)
@@ -41,6 +44,9 @@ export default function FormulairePilote({
 
   // ── Publication ───────────────────────────────────────────────────────────
   const [envoiEnCours, setEnvoiEnCours] = useState(false)
+  // Vrai entre la publication réussie et l'arrivée sur la page de lecture :
+  // maintient le bouton désactivé pour empêcher une double publication.
+  const [redirection, setRedirection] = useState(false)
   const [retour, setRetour] = useState<{ type: 'succes' | 'erreur'; texte: string } | null>(null)
   const [dernierePublication, setDernierePublication] = useState(etatInitial.maj_le)
 
@@ -174,20 +180,36 @@ export default function FormulairePilote({
           type: 'erreur',
           texte: charge?.erreur || `Publication refusée (code ${reponse.status}).`,
         })
+        setEnvoiEnCours(false)
         return
       }
 
       if (mode === 'pin') window.sessionStorage.setItem(CLE_PIN_SESSION, pin)
       setDernierePublication(charge?.etat?.maj_le || '')
-      setRetour({ type: 'succes', texte: 'État publié. Les pages de lecture sont à jour.' })
+      setRetour({
+        type: 'succes',
+        texte: 'État publié. Redirection vers la page de lecture…',
+      })
+
+      // Retour à la page de lecture après publication. Le court délai laisse la
+      // confirmation s'afficher : sans lui, le pilote ne saurait pas si la
+      // publication a abouti ou si la page a simplement changé toute seule.
+      setRedirection(true)
+      window.setTimeout(() => {
+        routeur.push('/')
+        routeur.refresh()
+      }, 900)
+      // On sort sans repasser par le `finally` : le bouton doit rester
+      // désactivé pendant la redirection, sinon un double clic republie.
+      return
     } catch {
       setRetour({
         type: 'erreur',
         texte: 'Publication impossible : le serveur est injoignable. Réessayez.',
       })
-    } finally {
-      setEnvoiEnCours(false)
     }
+
+    setEnvoiEnCours(false)
   }
 
   // ── Écrans d'accès ────────────────────────────────────────────────────────
@@ -507,8 +529,12 @@ export default function FormulairePilote({
         {/* ── Publication ── */}
         <section className="card">
           <div className="actions-publication">
-            <button type="submit" className="btn btn-principal" disabled={envoiEnCours}>
-              {envoiEnCours ? 'Publication…' : "Publier l'état"}
+            <button
+              type="submit"
+              className="btn btn-principal"
+              disabled={envoiEnCours || redirection}
+            >
+              {redirection ? 'Publié' : envoiEnCours ? 'Publication…' : "Publier l'état"}
             </button>
             {horodatage ? (
               <span className="mention">Dernière publication : {horodatage}</span>

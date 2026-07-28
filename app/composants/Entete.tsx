@@ -6,7 +6,7 @@ import type { ReactNode } from 'react'
  * Le logo est servi depuis /public ; il n'est pas redessiné en code.
  */
 export default function Entete({
-  sousTitre = 'Plateau technique automation · information interne',
+  sousTitre = 'Site : BEZANNES',
   indicateur,
 }: {
   sousTitre?: string
@@ -20,7 +20,7 @@ export default function Entete({
           <img src="/logo-bioxa.jpg" alt="BIOXA Laboratoire" />
         </span>
         <div className="titles">
-          <h1>État de la chaîne APTIO</h1>
+          <h1>État de production du plateau technique</h1>
           <p>{sousTitre}</p>
         </div>
       </div>

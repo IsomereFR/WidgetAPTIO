@@ -23,9 +23,9 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'État de la chaîne APTIO · BIOXA',
+  title: 'État de production du plateau technique · BIOXA',
   description:
-    "Affichage temps réel de l'état de fonctionnement de la chaîne d'automation APTIO.",
+    "Affichage temps réel de l'état de production du plateau technique — site de Bezannes.",
   robots: { index: false, follow: false },
 }
 
