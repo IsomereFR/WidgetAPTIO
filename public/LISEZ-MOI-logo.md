@@ -1,16 +1,21 @@
 # Logo BIOXA
 
-Le fichier `logo-bioxa.svg` présent ici est un **placeholder** : il affiche un cadre
-« emplacement du logo ». Le logo BIOXA officiel n'a volontairement pas été redessiné.
+`logo-bioxa.jpg` est le logo officiel, **extrait tel quel** de la maquette de
+référence `maquette_widget_APTIO.html` (il y était embarqué en base64). Il n'a
+pas été redessiné ni retouché.
 
-## À faire avant diffusion
+- Format : JPEG, 336 × 504 px, **fond noir opaque** (le JPEG ne gère pas la
+  transparence).
+- Rendu : hauteur 44 px, posé sur la réserve blanche de l'en-tête, exactement
+  comme dans la maquette.
 
-Remplacez `public/logo-bioxa.svg` par le logo BIOXA officiel, **en conservant le même
-nom de fichier** — aucune modification de code n'est alors nécessaire.
+## Point à arbitrer
 
-- Format conseillé : SVG détouré (fond transparent), ou PNG à fond transparent.
-- Le logo est posé sur une **réserve blanche** (§7 du PRD) : il doit rester lisible sur blanc.
-- Hauteur de rendu : 46 px sur grand écran, 36 px sur mobile. Prévoyez une définition suffisante.
+Le §7 du PRD demande un « logo détouré sur réserve claire ». L'asset présent
+dans la maquette a un fond noir : sur la réserve blanche, il apparaît donc comme
+un petit rectangle sombre. C'est le comportement de la maquette, reproduit à
+l'identique.
 
-Si vous utilisez un PNG plutôt qu'un SVG, renommez-le `logo-bioxa.png` et ajustez
-l'attribut `src` dans `app/composants/Entete.tsx`.
+Si vous souhaitez un rendu réellement détouré, déposez une version PNG à fond
+transparent sous le nom `logo-bioxa.png` et changez l'attribut `src` dans
+`app/composants/Entete.tsx`.

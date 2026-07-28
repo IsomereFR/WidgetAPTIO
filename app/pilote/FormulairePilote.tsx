@@ -19,8 +19,7 @@ type ModeAcces = 'auth' | 'pin'
 
 const CLE_PIN_SESSION = 'aptio_pilote_pin'
 
-const CONSIGNE_DONNEES =
-  'Ne saisir AUCUNE donnée patient (nom, identifiant, dossier).'
+const CONSIGNE_DONNEES = 'Ne saisir AUCUNE donnée patient (nom, identifiant, dossier).'
 
 export default function FormulairePilote({
   mode,
@@ -180,7 +179,7 @@ export default function FormulairePilote({
 
       if (mode === 'pin') window.sessionStorage.setItem(CLE_PIN_SESSION, pin)
       setDernierePublication(charge?.etat?.maj_le || '')
-      setRetour({ type: 'succes', texte: "État publié. Les pages de lecture sont à jour." })
+      setRetour({ type: 'succes', texte: 'État publié. Les pages de lecture sont à jour.' })
     } catch {
       setRetour({
         type: 'erreur',
@@ -196,8 +195,11 @@ export default function FormulairePilote({
   if (mode === 'pin' && !pinValide) {
     return (
       <Enveloppe>
-        <div className="carte bloc-connexion">
-          <h2 className="carte-intitule">Accès pilote</h2>
+        <section className="card bloc-connexion">
+          <h2>
+            <span className="ic" aria-hidden="true" />
+            Accès pilote
+          </h2>
           <form
             onSubmit={(evenement) => {
               evenement.preventDefault()
@@ -216,14 +218,14 @@ export default function FormulairePilote({
                 required
               />
             </label>
-            <button type="submit" className="bouton bouton-principal">
+            <button type="submit" className="btn btn-principal">
               Accéder
             </button>
           </form>
-          <p className="gouvernance" style={{ marginTop: 18 }}>
+          <p className="mention" style={{ marginTop: 16 }}>
             Le code est vérifié par le serveur au moment de la publication.
           </p>
-        </div>
+        </section>
       </Enveloppe>
     )
   }
@@ -231,9 +233,9 @@ export default function FormulairePilote({
   if (mode === 'auth' && !sessionChargee) {
     return (
       <Enveloppe>
-        <div className="carte bloc-connexion">
-          <p style={{ margin: 0 }}>Vérification de la session…</p>
-        </div>
+        <section className="card bloc-connexion">
+          <p className="mention">Vérification de la session…</p>
+        </section>
       </Enveloppe>
     )
   }
@@ -241,12 +243,18 @@ export default function FormulairePilote({
   if (mode === 'auth' && !session) {
     return (
       <Enveloppe>
-        <div className="carte bloc-connexion">
-          <h2 className="carte-intitule">Accès pilote</h2>
+        <section className="card bloc-connexion">
+          <h2>
+            <span className="ic" aria-hidden="true" />
+            Accès pilote
+          </h2>
           {lienEnvoye ? (
             <div className="encart encart-succes">
-              Lien de connexion envoyé à {email.trim()}. Ouvrez-le depuis ce poste pour accéder
-              à la publication.
+              <span className="ic" aria-hidden="true" />
+              <span>
+                Lien de connexion envoyé à {email.trim()}. Ouvrez-le depuis ce poste pour accéder
+                à la publication.
+              </span>
             </div>
           ) : (
             <form onSubmit={envoyerLienMagique}>
@@ -268,15 +276,16 @@ export default function FormulairePilote({
               </label>
               {erreurAuth ? (
                 <div className="encart encart-erreur" style={{ marginBottom: 18 }}>
-                  {erreurAuth}
+                  <span className="ic" aria-hidden="true" />
+                  <span>{erreurAuth}</span>
                 </div>
               ) : null}
-              <button type="submit" className="bouton bouton-principal">
+              <button type="submit" className="btn btn-principal">
                 Recevoir un lien de connexion
               </button>
             </form>
           )}
-        </div>
+        </section>
       </Enveloppe>
     )
   }
@@ -295,22 +304,25 @@ export default function FormulairePilote({
       </div>
 
       {mode === 'auth' && session?.user?.email ? (
-        <div className="carte" style={{ marginBottom: 22, padding: '16px 24px' }}>
+        <section className="card" style={{ padding: '16px 22px' }}>
           <div className="actions-publication" style={{ justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '0.95rem' }}>
+            <span style={{ fontSize: 13.5 }}>
               Connecté en tant que <strong>{session.user.email}</strong>
             </span>
-            <button type="button" className="bouton bouton-secondaire" onClick={seDeconnecter}>
+            <button type="button" className="btn" onClick={seDeconnecter}>
               Se déconnecter
             </button>
           </div>
-        </div>
+        </section>
       ) : null}
 
       <form onSubmit={publier}>
         {/* ── Trafic ── */}
-        <section className="carte">
-          <h3 className="carte-intitule">État du trafic</h3>
+        <section className="card">
+          <h2>
+            <span className="ic" aria-hidden="true" />
+            Trafic de la chaîne
+          </h2>
           <div className="choix-trafic" role="group" aria-label="État du trafic">
             {TRAFICS.map((niveau) => {
               const presentation = PRESENTATION_TRAFIC[niveau]
@@ -321,7 +333,12 @@ export default function FormulairePilote({
                   className="option-trafic"
                   aria-pressed={trafic === niveau}
                   onClick={() => setTrafic(niveau)}
-                  style={{ '--couleur-option': presentation.couleur } as CSSProperties}
+                  style={
+                    {
+                      '--couleur-option': presentation.couleur,
+                      '--halo-option': presentation.halo,
+                    } as CSSProperties
+                  }
                 >
                   <span className="option-pastille" aria-hidden="true" />
                   {presentation.libelle}
@@ -332,8 +349,11 @@ export default function FormulairePilote({
         </section>
 
         {/* ── Analyses ── */}
-        <section className="carte">
-          <h3 className="carte-intitule">Analyses</h3>
+        <section className="card">
+          <h2>
+            <span className="ic" aria-hidden="true" />
+            Analyses
+          </h2>
 
           <div className="bascule" role="group" aria-label="Disponibilité des analyses">
             <button
@@ -358,8 +378,9 @@ export default function FormulairePilote({
             <>
               <hr className="separateur" />
 
-              <div className="encart encart-consigne" style={{ marginBottom: 18 }}>
-                {CONSIGNE_DONNEES}
+              <div className="encart encart-consigne" style={{ marginBottom: 16 }}>
+                <span className="ic" aria-hidden="true" />
+                <span>{CONSIGNE_DONNEES}</span>
               </div>
 
               {analyses.map((entree, index) => (
@@ -368,7 +389,7 @@ export default function FormulairePilote({
                     <span className="ligne-analyse-numero">Analyse {index + 1}</span>
                     <button
                       type="button"
-                      className="bouton bouton-retrait"
+                      className="btn btn-retrait"
                       onClick={() => retirerAnalyse(index)}
                     >
                       − Retirer
@@ -380,7 +401,9 @@ export default function FormulairePilote({
                     <input
                       type="text"
                       value={entree.analyse}
-                      onChange={(evenement) => modifierAnalyse(index, 'analyse', evenement.target.value)}
+                      onChange={(evenement) =>
+                        modifierAnalyse(index, 'analyse', evenement.target.value)
+                      }
                       maxLength={200}
                     />
                   </label>
@@ -406,7 +429,7 @@ export default function FormulairePilote({
 
               <button
                 type="button"
-                className="bouton bouton-secondaire"
+                className="btn"
                 style={{ marginTop: 14 }}
                 onClick={ajouterAnalyse}
               >
@@ -417,11 +440,15 @@ export default function FormulairePilote({
         </section>
 
         {/* ── Message libre ── */}
-        <section className="carte">
-          <h3 className="carte-intitule">Message (optionnel)</h3>
+        <section className="card">
+          <h2>
+            <span className="ic" aria-hidden="true" />
+            Message (optionnel)
+          </h2>
 
-          <div className="encart encart-consigne" style={{ marginBottom: 18 }}>
-            {CONSIGNE_DONNEES}
+          <div className="encart encart-consigne" style={{ marginBottom: 16 }}>
+            <span className="ic" aria-hidden="true" />
+            <span>{CONSIGNE_DONNEES}</span>
           </div>
 
           <label className="champ" style={{ marginBottom: 0 }}>
@@ -438,9 +465,12 @@ export default function FormulairePilote({
 
         {/* ── Auteur (mode PIN) ── */}
         {mode === 'pin' ? (
-          <section className="carte">
-            <h3 className="carte-intitule">Auteur de la mise à jour</h3>
-            <label className="champ" style={{ marginBottom: 0, maxWidth: 420 }}>
+          <section className="card">
+            <h2>
+              <span className="ic" aria-hidden="true" />
+              Auteur de la mise à jour
+            </h2>
+            <label className="champ" style={{ marginBottom: 0, maxWidth: 400 }}>
               <span className="champ-intitule">
                 Poste ou initiales
                 <span className="champ-aide">Affiché à côté de l&apos;horodatage.</span>
@@ -456,25 +486,24 @@ export default function FormulairePilote({
         ) : null}
 
         {/* ── Publication ── */}
-        <section className="carte">
+        <section className="card">
           <div className="actions-publication">
-            <button type="submit" className="bouton bouton-principal" disabled={envoiEnCours}>
+            <button type="submit" className="btn btn-principal" disabled={envoiEnCours}>
               {envoiEnCours ? 'Publication…' : "Publier l'état"}
             </button>
             {horodatage ? (
-              <span style={{ fontSize: '0.92rem', color: 'var(--anthracite-doux)' }}>
-                Dernière publication : {horodatage}
-              </span>
+              <span className="mention">Dernière publication : {horodatage}</span>
             ) : null}
           </div>
 
           {retour ? (
             <div
               className={`encart ${retour.type === 'succes' ? 'encart-succes' : 'encart-erreur'}`}
-              style={{ marginTop: 18 }}
+              style={{ marginTop: 16 }}
               role="status"
             >
-              {retour.texte}
+              <span className="ic" aria-hidden="true" />
+              <span>{retour.texte}</span>
             </div>
           ) : null}
         </section>
@@ -485,11 +514,9 @@ export default function FormulairePilote({
 
 function Enveloppe({ children }: { children: React.ReactNode }) {
   return (
-    <div className="page">
-      <Entete sousTitre="Espace pilote" />
-      <main className="corps">
-        <div className="contenu">{children}</div>
-      </main>
+    <div className="wrap">
+      <Entete sousTitre="Espace pilote · publication de l'état" />
+      {children}
     </div>
   )
 }

@@ -6,10 +6,11 @@ import { formaterHorodatage } from '@/lib/format'
 import { supabaseNavigateur } from '@/lib/supabase-navigateur'
 import { normaliserEtat, PRESENTATION_TRAFIC, type EtatChaine } from '@/lib/types'
 import Entete from './composants/Entete'
-import NoteGouvernance from './composants/NoteGouvernance'
+import { TEXTE_GOUVERNANCE } from './composants/NoteGouvernance'
 
 /**
  * Page de lecture, temps réel (§4.4 du PRD).
+ * Structure et styles repris de `maquette_widget_APTIO.html`.
  *
  * L'état initial est rendu côté serveur (affichage immédiat), puis ce composant
  * s'abonne aux changements de `etat_chaine` via Supabase Realtime avec la clé anon.
@@ -82,94 +83,106 @@ export default function AffichageEtat({
   const presentation = PRESENTATION_TRAFIC[etat.trafic]
   const horodatage = formaterHorodatage(etat.maj_le)
 
-  // Une liste vide vaut « toutes disponibles » : on ne veut jamais afficher
-  // un bloc « indisponibles » sans aucune ligne.
+  // Une liste vide vaut « toutes disponibles » : on n'affiche jamais un bloc
+  // « indisponibles » sans aucune ligne.
   const toutesDisponibles =
     etat.analyses_toutes_disponibles || etat.analyses_indisponibles.length === 0
 
   return (
-    <div className="page">
+    <div className="wrap">
       <Entete
-        actionDroite={
-          <span className="direct" data-actif={enDirect} title={enDirect ? 'Mise à jour automatique active' : 'Connexion au flux temps réel…'}>
-            <span className="direct-point" aria-hidden="true" />
-            {enDirect ? 'En direct' : 'Connexion…'}
+        indicateur={
+          <span
+            className="live"
+            data-actif={enDirect}
+            title={enDirect ? 'Mise à jour automatique active' : 'Connexion au flux temps réel…'}
+          >
+            <span className="dotpulse" aria-hidden="true" />
+            {enDirect ? 'Actualisation auto' : 'Connexion…'}
           </span>
         }
       />
 
-      <main className="corps">
-        <div className="contenu">
-          {configurationManquante ? (
-            <div className="carte">
-              <p className="encart encart-erreur" style={{ margin: 0 }}>
-                Configuration Supabase absente. Renseignez NEXT_PUBLIC_SUPABASE_URL et
-                NEXT_PUBLIC_SUPABASE_ANON_KEY, puis rechargez la page.
-              </p>
-            </div>
-          ) : null}
-
-          {/* ── Bloc statut, grand format ── */}
-          <section className="carte" aria-live="polite">
-            <h2 className="carte-intitule">État du trafic</h2>
-            <div
-              className="statut"
-              style={{ '--couleur-statut': presentation.couleur } as CSSProperties}
-            >
-              <span className="pastille" aria-hidden="true" />
-              <div>
-                <p className="statut-libelle">{presentation.libelle}</p>
-                <p className="statut-descriptif">{presentation.descriptif}</p>
-              </div>
-            </div>
-          </section>
-
-          {/* ── Bloc analyses ── */}
-          <section className="carte" aria-live="polite">
-            <h2 className="carte-intitule">
-              {toutesDisponibles ? 'Analyses' : 'Analyses indisponibles'}
-            </h2>
-            {toutesDisponibles ? (
-              <p className="analyses-toutes">
-                <span className="puce-disponible" aria-hidden="true" />
-                Toutes les analyses disponibles
-              </p>
-            ) : (
-              <ul className="liste-analyses">
-                {etat.analyses_indisponibles.map((entree, index) => (
-                  <li className="analyse" key={`${entree.analyse}-${index}`}>
-                    <p className="analyse-nom">{entree.analyse || 'Analyse non nommée'}</p>
-                    {entree.commentaire ? (
-                      <p className="analyse-commentaire">{entree.commentaire}</p>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          {/* ── Message libre, seulement s'il est renseigné ── */}
-          {etat.message.trim() ? (
-            <section className="carte" aria-live="polite">
-              <h2 className="carte-intitule">Message</h2>
-              <p className="message">{etat.message}</p>
-            </section>
-          ) : null}
+      {configurationManquante ? (
+        <div className="encart encart-erreur" style={{ marginBottom: 20 }}>
+          <span className="ic" aria-hidden="true" />
+          <span>
+            Configuration Supabase absente. Renseignez NEXT_PUBLIC_SUPABASE_URL et
+            NEXT_PUBLIC_SUPABASE_ANON_KEY, puis rechargez la page.
+          </span>
         </div>
-      </main>
+      ) : null}
 
-      <footer className="pied">
-        <div className="contenu">
-          {horodatage ? (
-            <p className="maj">
-              Dernière mise à jour : {horodatage}
-              {etat.maj_par ? ` · ${etat.maj_par}` : ''}
-            </p>
-          ) : (
-            <p className="maj maj-vide">Aucune mise à jour enregistrée pour le moment.</p>
-          )}
-          <NoteGouvernance />
+      {/* ── Carte statut ── */}
+      <section
+        className="hero"
+        aria-live="polite"
+        style={
+          {
+            '--state-color': presentation.couleur,
+            '--state-halo': presentation.halo,
+          } as CSSProperties
+        }
+      >
+        <div className="lbl">Trafic de la chaîne</div>
+        <div className="status-line">
+          <div className="status-dot" aria-hidden="true" />
+          <div className="status-text">
+            <div className="state">{presentation.libelle}</div>
+            <div className="desc">{presentation.descriptif}</div>
+          </div>
         </div>
+      </section>
+
+      {/* ── Carte analyses ── */}
+      <section className="card" aria-live="polite">
+        <h2>
+          <span className="ic" aria-hidden="true" />
+          Analyses
+        </h2>
+
+        {toutesDisponibles ? (
+          <div className="all-ok">
+            <div className="big-dot" aria-hidden="true" />
+            <div className="txt">
+              <strong>Toutes les analyses disponibles</strong>
+              <span>Aucune indisponibilité signalée sur la chaîne.</span>
+            </div>
+          </div>
+        ) : (
+          <ul className="indispo-list">
+            {etat.analyses_indisponibles.map((entree, index) => (
+              <li className="indispo" key={`${entree.analyse}-${index}`}>
+                <div className="name">
+                  <span className="pin" aria-hidden="true" />
+                  {entree.analyse || 'Analyse non nommée'}
+                </div>
+                {entree.commentaire ? <div className="note">{entree.commentaire}</div> : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* ── Message libre, seulement s'il est renseigné ── */}
+      {etat.message.trim() ? (
+        <div className="msg" aria-live="polite">
+          <span className="ic" aria-hidden="true" />
+          <div className="texte">{etat.message}</div>
+        </div>
+      ) : null}
+
+      {/* ── Pied ── */}
+      <footer className="foot">
+        {horodatage ? (
+          <div className="maj">
+            Dernière mise à jour : <strong>{horodatage}</strong>
+            {etat.maj_par ? ` · ${etat.maj_par}` : ''}
+          </div>
+        ) : (
+          <div className="maj">Aucune mise à jour enregistrée pour le moment.</div>
+        )}
+        <div className="note">{TEXTE_GOUVERNANCE}</div>
       </footer>
     </div>
   )

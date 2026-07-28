@@ -1,328 +1,402 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   DA BIOXA · tokens (§7 du PRD)
-   Crème, anthracite, marine, brume. Manrope pour les titres, Inter pour le corps.
-   Épuré, grand format, lisible de loin. Aucun smiley.
+   DA BIOXA · styles repris de `maquette_widget_APTIO.html` (référence visuelle).
+   Les valeurs de la page de lecture sont celles de la maquette, à l'identique.
+   Les styles du formulaire pilote, absent de la maquette, en reprennent le
+   vocabulaire visuel (cartes 18px, bordures brume, pastilles d'état).
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
+  --marine: #14304a;
   --creme: #f7f2ea;
   --blanc: #ffffff;
-  --anthracite: #1e2933;
-  --marine: #14304a;
+  --encre: #1e2933;
+  --terracotta: #c0623f;
+  --ambre: #d7a24a;
+  --sauge: #6f9080;
   --brume: #d5dbdf;
 
-  --vert-sauge: #6f9080;
-  --ambre: #d7a24a;
-  --terracotta: #c0623f;
+  /* Gris de texte de la maquette */
+  --gris-corps: #5b6570;
+  --gris-etiquette: #7a828c;
+  --gris-note: #98a0a8;
 
-  --anthracite-doux: rgba(30, 41, 51, 0.62);
-  --brume-douce: rgba(213, 219, 223, 0.55);
-
-  --rayon: 14px;
-  --rayon-large: 20px;
-  --ombre: 0 1px 2px rgba(20, 48, 74, 0.04), 0 8px 28px rgba(20, 48, 74, 0.06);
-
-  --police-titre: var(--police-manrope), 'Manrope', ui-sans-serif, system-ui, sans-serif;
-  --police-corps: var(--police-inter), 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-titre: var(--police-manrope), 'Manrope', system-ui, -apple-system, sans-serif;
+  --font-corps: var(--police-inter), 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-*,
-*::before,
-*::after {
+* {
   box-sizing: border-box;
-}
-
-html,
-body {
   margin: 0;
   padding: 0;
 }
 
 body {
+  font-family: var(--font-corps);
+  color: var(--encre);
   background: var(--creme);
-  color: var(--anthracite);
-  font-family: var(--police-corps);
-  font-size: 17px;
-  line-height: 1.6;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  padding: 32px 20px 60px;
 }
 
-h1,
-h2,
-h3 {
-  font-family: var(--police-titre);
-  font-weight: 700;
-  letter-spacing: -0.018em;
-  margin: 0;
-  color: var(--marine);
-}
-
-/* ── Ossature ─────────────────────────────────────────────────────────────── */
-
-.page {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-}
-
-.contenu {
-  width: 100%;
-  max-width: 980px;
+.wrap {
+  max-width: 840px;
   margin: 0 auto;
-  padding: 0 24px;
 }
 
-/* ── En-tête : logo sur réserve blanche + titre ───────────────────────────── */
+/* ── En-tête ──────────────────────────────────────────────────────────────── */
 
-.entete {
-  background: var(--blanc);
-  border-bottom: 1px solid var(--brume);
-}
-
-.entete-interieur {
+header.top {
   display: flex;
   align-items: center;
-  gap: 22px;
-  padding-top: 20px;
-  padding-bottom: 20px;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 28px;
 }
 
-.reserve-logo {
-  display: inline-flex;
+.brand {
+  display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 16px;
+}
+
+.logo-reserve {
   background: var(--blanc);
-  border-radius: 10px;
+  border: 1px solid var(--brume);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
 }
 
-.reserve-logo img {
-  display: block;
-  height: 46px;
+.logo-reserve img {
+  height: 44px;
   width: auto;
+  display: block;
 }
 
-.entete-titre {
-  font-size: clamp(1.45rem, 1.1rem + 1.4vw, 2rem);
-  line-height: 1.2;
-}
-
-.entete-sous-titre {
-  margin: 2px 0 0;
-  font-size: 0.9rem;
-  color: var(--anthracite-doux);
-}
-
-/* ── Corps ────────────────────────────────────────────────────────────────── */
-
-main.corps {
-  flex: 1;
-  padding: 40px 0 56px;
-}
-
-.carte {
-  background: var(--blanc);
-  border: 1px solid var(--brume);
-  border-radius: var(--rayon-large);
-  box-shadow: var(--ombre);
-  padding: 34px 36px;
-}
-
-.carte + .carte {
-  margin-top: 22px;
-}
-
-.carte-intitule {
-  font-family: var(--police-titre);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  color: var(--anthracite-doux);
-  margin: 0 0 18px;
-}
-
-/* ── Bloc statut, grand format ────────────────────────────────────────────── */
-
-.statut {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-}
-
-.pastille {
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--couleur-statut);
-  box-shadow: 0 0 0 9px color-mix(in srgb, var(--couleur-statut) 16%, transparent);
-}
-
-.statut-libelle {
-  font-family: var(--police-titre);
-  font-size: clamp(2rem, 1.4rem + 2.6vw, 3.1rem);
+.titles h1 {
+  font-family: var(--font-titre);
   font-weight: 800;
-  line-height: 1.08;
-  letter-spacing: -0.028em;
-  color: var(--couleur-statut);
-  margin: 0;
-}
-
-.statut-descriptif {
-  margin: 8px 0 0;
-  font-size: 1.12rem;
-  color: var(--anthracite-doux);
-}
-
-/* ── Bloc analyses ────────────────────────────────────────────────────────── */
-
-.analyses-toutes {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-size: 1.28rem;
-  font-weight: 600;
-  font-family: var(--police-titre);
+  font-size: 26px;
   color: var(--marine);
+  letter-spacing: -0.01em;
+  line-height: 1.15;
 }
 
-.puce-disponible {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--vert-sauge);
-  flex-shrink: 0;
+.titles p {
+  font-size: 13.5px;
+  color: var(--gris-corps);
+  margin-top: 2px;
 }
 
-.liste-analyses {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.analyse {
-  border: 1px solid var(--brume);
-  border-left: 5px solid var(--terracotta);
-  border-radius: var(--rayon);
-  background: var(--creme);
-  padding: 18px 20px;
-}
-
-.analyse-nom {
-  font-family: var(--police-titre);
-  font-size: 1.18rem;
-  font-weight: 700;
-  color: var(--marine);
-  margin: 0;
-}
-
-.analyse-commentaire {
-  margin: 6px 0 0;
-  font-size: 1rem;
-  color: var(--anthracite);
-  white-space: pre-wrap;
-}
-
-/* ── Message libre ────────────────────────────────────────────────────────── */
-
-.message {
-  font-size: 1.1rem;
-  white-space: pre-wrap;
-  margin: 0;
-}
-
-/* ── Pied de page ─────────────────────────────────────────────────────────── */
-
-.pied {
-  border-top: 1px solid var(--brume);
-  background: var(--blanc);
-  padding: 26px 0 34px;
-}
-
-.maj {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--marine);
-  margin: 0;
-}
-
-.maj-vide {
-  font-weight: 500;
-  color: var(--anthracite-doux);
-}
-
-.gouvernance {
-  margin: 12px 0 0;
-  font-size: 0.86rem;
-  line-height: 1.55;
-  color: var(--anthracite-doux);
-  max-width: 72ch;
-}
-
-/* ── Indicateur temps réel ────────────────────────────────────────────────── */
-
-.direct {
+.live {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--anthracite-doux);
-  margin-left: auto;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--gris-corps);
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--blanc);
+  border: 1px solid var(--brume);
+  padding: 6px 11px;
+  border-radius: 999px;
+}
+
+.live .dotpulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brume);
   flex-shrink: 0;
 }
 
-.direct-point {
+/* La pulsation ne s'active qu'une fois l'abonnement temps réel établi. */
+.live[data-actif='true'] .dotpulse {
+  background: var(--sauge);
+  box-shadow: 0 0 0 0 rgba(111, 144, 128, 0.5);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(111, 144, 128, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(111, 144, 128, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(111, 144, 128, 0);
+  }
+}
+
+/* ── Carte statut ─────────────────────────────────────────────────────────── */
+
+.hero {
+  background: var(--blanc);
+  border: 1px solid var(--brume);
+  border-radius: 18px;
+  padding: 34px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  background: var(--state-color, var(--sauge));
+  transition: background 0.3s ease;
+}
+
+.hero .lbl {
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--gris-etiquette);
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.status-line {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.status-dot {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--state-color, var(--sauge));
+  box-shadow: 0 0 0 6px var(--state-halo, rgba(111, 144, 128, 0.14));
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.status-text .state {
+  font-family: var(--font-titre);
+  font-weight: 800;
+  font-size: 44px;
+  color: var(--marine);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.status-text .desc {
+  font-size: 15px;
+  color: var(--gris-corps);
+  margin-top: 8px;
+}
+
+/* ── Cartes ───────────────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--blanc);
+  border: 1px solid var(--brume);
+  border-radius: 18px;
+  padding: 26px 30px;
+  margin-bottom: 20px;
+}
+
+.card h2 {
+  font-family: var(--font-titre);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--marine);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h2 .ic {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--brume);
-  transition: background 240ms ease;
+  background: var(--marine);
+  flex-shrink: 0;
 }
 
-.direct[data-actif='true'] .direct-point {
-  background: var(--vert-sauge);
-  animation: pulsation 2.4s ease-in-out infinite;
+.all-ok {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
-@keyframes pulsation {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.35;
-  }
+.all-ok .big-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--sauge);
+  box-shadow: 0 0 0 5px rgba(111, 144, 128, 0.14);
+  flex-shrink: 0;
 }
 
-/* ── Formulaire pilote ────────────────────────────────────────────────────── */
+.all-ok .txt strong {
+  font-family: var(--font-titre);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--encre);
+}
+
+.all-ok .txt span {
+  display: block;
+  font-size: 13.5px;
+  color: var(--gris-etiquette);
+  margin-top: 2px;
+}
+
+.indispo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+}
+
+.indispo {
+  border: 1px solid var(--brume);
+  border-left: 4px solid var(--terracotta);
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: #fdfbf9;
+}
+
+.indispo .name {
+  font-family: var(--font-titre);
+  font-weight: 700;
+  font-size: 15.5px;
+  color: var(--marine);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.indispo .name .pin {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--terracotta);
+  flex-shrink: 0;
+}
+
+.indispo .note {
+  font-size: 14px;
+  color: var(--gris-corps);
+  margin-top: 5px;
+  padding-left: 17px;
+  white-space: pre-wrap;
+}
+
+/* ── Message ──────────────────────────────────────────────────────────────── */
+
+.msg {
+  background: rgba(215, 162, 74, 0.1);
+  border: 1px solid rgba(215, 162, 74, 0.35);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 14.5px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.msg .ic {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ambre);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.msg .texte {
+  white-space: pre-wrap;
+}
+
+/* ── Pied ─────────────────────────────────────────────────────────────────── */
+
+footer.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 6px;
+  font-size: 13px;
+  color: var(--gris-etiquette);
+  flex-wrap: wrap;
+}
+
+footer.foot .maj {
+  font-weight: 500;
+}
+
+footer.foot .note {
+  font-size: 12px;
+  color: var(--gris-note);
+  max-width: 420px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Formulaire pilote — absent de la maquette, même vocabulaire visuel.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.pilote-entete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.pilote-titre {
+  font-family: var(--font-titre);
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--marine);
+  letter-spacing: -0.01em;
+}
+
+.lien-lecture {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--marine);
+}
+
+.bloc-connexion {
+  max-width: 440px;
+  margin: 0 auto;
+}
 
 .champ {
   display: block;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .champ-intitule {
   display: block;
-  font-family: var(--police-titre);
-  font-size: 0.95rem;
+  font-family: var(--font-titre);
   font-weight: 700;
+  font-size: 14px;
   color: var(--marine);
-  margin-bottom: 8px;
+  margin-bottom: 7px;
 }
 
 .champ-aide {
   display: block;
-  font-size: 0.86rem;
+  font-family: var(--font-corps);
+  font-size: 12.5px;
   font-weight: 400;
-  color: var(--anthracite-doux);
+  color: var(--gris-etiquette);
   margin-top: 3px;
 }
 
@@ -331,14 +405,14 @@ input[type='email'],
 input[type='password'],
 textarea {
   width: 100%;
-  font-family: var(--police-corps);
-  font-size: 1rem;
-  color: var(--anthracite);
+  font-family: var(--font-corps);
+  font-size: 14.5px;
+  color: var(--encre);
   background: var(--blanc);
   border: 1px solid var(--brume);
-  border-radius: var(--rayon);
-  padding: 11px 14px;
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  border-radius: 10px;
+  padding: 10px 13px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 input:focus-visible,
@@ -346,65 +420,64 @@ textarea:focus-visible,
 button:focus-visible {
   outline: none;
   border-color: var(--marine);
-  box-shadow: 0 0 0 3px rgba(20, 48, 74, 0.14);
+  box-shadow: 0 0 0 3px rgba(20, 48, 74, 0.13);
 }
 
 textarea {
   resize: vertical;
-  min-height: 76px;
-  line-height: 1.55;
+  min-height: 72px;
+  line-height: 1.5;
 }
 
-/* Choix de trafic : trois boutons exclusifs */
+/* Trois boutons de trafic exclusifs */
 
 .choix-trafic {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
 }
 
 .option-trafic {
   display: flex;
   align-items: center;
-  gap: 13px;
-  padding: 16px 18px;
+  gap: 11px;
+  padding: 14px 16px;
   border: 1.5px solid var(--brume);
-  border-radius: var(--rayon);
+  border-radius: 12px;
   background: var(--blanc);
   cursor: pointer;
   text-align: left;
-  font-family: var(--police-titre);
-  font-size: 1.02rem;
+  font-family: var(--font-titre);
+  font-size: 15px;
   font-weight: 700;
-  color: var(--anthracite);
-  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+  color: var(--encre);
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .option-trafic:hover {
-  border-color: color-mix(in srgb, var(--couleur-option) 55%, var(--brume));
+  border-color: #b9c0c7;
 }
 
 .option-trafic[aria-pressed='true'] {
   border-color: var(--couleur-option);
-  background: color-mix(in srgb, var(--couleur-option) 9%, var(--blanc));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--couleur-option) 16%, transparent);
-  color: var(--couleur-option);
+  background: var(--halo-option);
+  box-shadow: 0 0 0 3px var(--halo-option);
 }
 
 .option-pastille {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: var(--couleur-option);
   flex-shrink: 0;
 }
 
-/* Interrupteur disponibilité */
+/* Bascule de disponibilité */
 
 .bascule {
   display: inline-flex;
-  padding: 5px;
-  gap: 5px;
+  padding: 4px;
+  gap: 4px;
   background: var(--creme);
   border: 1px solid var(--brume);
   border-radius: 999px;
@@ -414,13 +487,13 @@ textarea {
   border: none;
   background: transparent;
   border-radius: 999px;
-  padding: 10px 20px;
-  font-family: var(--police-titre);
-  font-size: 0.95rem;
+  padding: 9px 18px;
+  font-family: var(--font-corps);
+  font-size: 13.5px;
   font-weight: 600;
-  color: var(--anthracite-doux);
+  color: var(--gris-corps);
   cursor: pointer;
-  transition: background 160ms ease, color 160ms ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .bascule-option[aria-pressed='true'] {
@@ -432,9 +505,10 @@ textarea {
 
 .ligne-analyse {
   border: 1px solid var(--brume);
-  border-radius: var(--rayon);
-  background: var(--creme);
-  padding: 16px 18px;
+  border-left: 4px solid var(--terracotta);
+  border-radius: 10px;
+  background: #fdfbf9;
+  padding: 16px;
 }
 
 .ligne-analyse + .ligne-analyse {
@@ -446,144 +520,137 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .ligne-analyse-numero {
-  font-family: var(--police-titre);
-  font-size: 0.76rem;
+  font-family: var(--font-titre);
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--anthracite-doux);
+  color: var(--gris-etiquette);
 }
 
 /* Boutons */
 
-.bouton {
-  font-family: var(--police-titre);
-  font-weight: 700;
-  border-radius: var(--rayon);
+.btn {
+  font-family: var(--font-corps);
+  font-size: 13.5px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 160ms ease, border-color 160ms ease, opacity 160ms ease;
-  border: 1px solid transparent;
+  border: 1px solid var(--brume);
+  background: var(--blanc);
+  color: var(--encre);
+  padding: 8px 15px;
+  border-radius: 999px;
+  transition: all 0.15s ease;
 }
 
-.bouton:disabled {
+.btn:hover:not(:disabled) {
+  border-color: #b9c0c7;
+}
+
+.btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.bouton-principal {
+.btn-principal {
   background: var(--marine);
   color: var(--blanc);
-  font-size: 1.05rem;
-  padding: 14px 30px;
-}
-
-.bouton-principal:hover:not(:disabled) {
-  background: #0f2438;
-}
-
-.bouton-secondaire {
-  background: var(--blanc);
-  border-color: var(--brume);
-  color: var(--marine);
-  font-size: 0.92rem;
-  padding: 9px 16px;
-}
-
-.bouton-secondaire:hover:not(:disabled) {
   border-color: var(--marine);
+  font-size: 14.5px;
+  padding: 11px 24px;
 }
 
-.bouton-retrait {
-  background: transparent;
+.btn-principal:hover:not(:disabled) {
+  background: #0f2438;
+  border-color: #0f2438;
+}
+
+.btn-retrait {
   border-color: transparent;
+  background: transparent;
   color: var(--terracotta);
-  font-size: 0.88rem;
-  padding: 6px 10px;
+  padding: 5px 10px;
 }
 
-.bouton-retrait:hover:not(:disabled) {
+.btn-retrait:hover:not(:disabled) {
   border-color: var(--terracotta);
 }
 
-/* Encarts d'information */
+/* Encarts */
 
 .encart {
-  border-radius: var(--rayon);
-  padding: 15px 18px;
-  font-size: 0.95rem;
-  line-height: 1.55;
+  border-radius: 12px;
+  padding: 13px 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
   border: 1px solid;
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+}
+
+.encart .ic {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .encart-consigne {
-  background: color-mix(in srgb, var(--ambre) 12%, var(--blanc));
-  border-color: color-mix(in srgb, var(--ambre) 48%, transparent);
+  background: rgba(215, 162, 74, 0.1);
+  border-color: rgba(215, 162, 74, 0.35);
   color: #6d4c14;
   font-weight: 600;
 }
 
+.encart-consigne .ic {
+  background: var(--ambre);
+}
+
 .encart-succes {
-  background: color-mix(in srgb, var(--vert-sauge) 13%, var(--blanc));
-  border-color: color-mix(in srgb, var(--vert-sauge) 48%, transparent);
+  background: rgba(111, 144, 128, 0.11);
+  border-color: rgba(111, 144, 128, 0.38);
   color: #2f4a3c;
   font-weight: 600;
 }
 
+.encart-succes .ic {
+  background: var(--sauge);
+}
+
 .encart-erreur {
-  background: color-mix(in srgb, var(--terracotta) 11%, var(--blanc));
-  border-color: color-mix(in srgb, var(--terracotta) 46%, transparent);
+  background: rgba(192, 98, 63, 0.09);
+  border-color: rgba(192, 98, 63, 0.38);
   color: #7a3320;
   font-weight: 600;
 }
 
-.encart-neutre {
-  background: var(--creme);
-  border-color: var(--brume);
-  color: var(--anthracite);
-}
-
-/* Page pilote : ossature */
-
-.pilote-entete {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 26px;
-}
-
-.pilote-titre {
-  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.05rem);
-}
-
-.lien-lecture {
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: var(--marine);
-}
-
-.bloc-connexion {
-  max-width: 460px;
-  margin: 8px auto 0;
+.encart-erreur .ic {
+  background: var(--terracotta);
 }
 
 .separateur {
   height: 1px;
   background: var(--brume);
   border: none;
-  margin: 26px 0;
+  margin: 22px 0;
 }
 
 .actions-publication {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
   flex-wrap: wrap;
+}
+
+.mention {
+  font-size: 12.5px;
+  color: var(--gris-etiquette);
 }
 
 .visuellement-masque {
@@ -598,29 +665,28 @@ textarea {
   border: 0;
 }
 
-/* ── Adaptations petits écrans ────────────────────────────────────────────── */
+/* ── Petits écrans (valeurs de la maquette) ───────────────────────────────── */
 
-@media (max-width: 640px) {
-  .carte {
+@media (max-width: 560px) {
+  .status-text .state {
+    font-size: 34px;
+  }
+
+  header.top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .titles h1 {
+    font-size: 22px;
+  }
+
+  .hero {
     padding: 24px 20px;
   }
 
-  .statut {
-    gap: 18px;
-  }
-
-  .pastille {
-    width: 54px;
-    height: 54px;
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--couleur-statut) 16%, transparent);
-  }
-
-  .entete-interieur {
-    gap: 14px;
-  }
-
-  .reserve-logo img {
-    height: 36px;
+  .card {
+    padding: 20px 18px;
   }
 }
 

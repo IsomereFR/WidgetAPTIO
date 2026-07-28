@@ -27,26 +27,30 @@ export type EtatChaine = {
 
 /**
  * Présentation des trois niveaux de trafic (§4.1 et §7 du PRD).
+ * Libellés, descriptifs, couleurs et halos repris de `maquette_widget_APTIO.html`.
  * La couleur ne porte jamais l'information seule : elle accompagne toujours le libellé.
  */
 export const PRESENTATION_TRAFIC: Record<
   Trafic,
-  { libelle: string; descriptif: string; couleur: string }
+  { libelle: string; descriptif: string; couleur: string; halo: string }
 > = {
   normal: {
     libelle: 'Trafic normal',
-    descriptif: 'Chaîne nominale, délais habituels.',
+    descriptif: 'Chaîne nominale, délais de rendu habituels.',
     couleur: '#6F9080',
+    halo: 'rgba(111,144,128,.14)',
   },
   retard: {
     libelle: 'Retard',
-    descriptif: 'Ralentissement, délais allongés.',
+    descriptif: 'Ralentissement sur la chaîne, délais de rendu allongés.',
     couleur: '#D7A24A',
+    halo: 'rgba(215,162,74,.16)',
   },
   retard_important: {
     libelle: 'Retard important',
-    descriptif: 'Perturbation forte, délais fortement impactés.',
+    descriptif: 'Perturbation forte de la chaîne, délais de rendu fortement impactés.',
     couleur: '#C0623F',
+    halo: 'rgba(192,98,63,.15)',
   },
 }
 

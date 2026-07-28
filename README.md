@@ -155,18 +155,32 @@ Pour un sous-domaine BIOXA (`chaine.bioxa.fr`), passez par Settings → Domains.
 
 ---
 
+## Fidélité à la maquette
+
+La page de lecture reprend `maquette_widget_APTIO.html` à l'identique : structure
+d'en-tête, carte statut avec barre latérale colorée, libellé d'état en 44 px
+marine, carte analyses, bandeau de message ambré, pied sur deux colonnes. Les
+valeurs (couleurs, halos, tailles, gris de texte, rayons) sont reprises telles
+quelles dans [`app/globals.css`](app/globals.css).
+
+Deux écarts assumés, tous deux volontaires :
+
+- Le **panneau de démonstration** de la maquette n'est pas repris : il est marqué
+  « Absent en production » dans la maquette elle-même.
+- Les **accents** sont rétablis (« État de la chaîne », « délais ») : la maquette
+  était saisie sans accents, le PRD les utilise.
+
+Le formulaire pilote n'existe pas dans la maquette ; il en reprend le vocabulaire
+visuel (cartes 18 px, bordures brume, pastilles d'état, boutons pilule).
+
 ## À faire avant diffusion
 
-- **Logo.** `public/logo-bioxa.svg` est un **placeholder** : le logo BIOXA n'a pas
-  été redessiné. Déposez le fichier officiel sous ce nom (voir
-  [`public/LISEZ-MOI-logo.md`](public/LISEZ-MOI-logo.md)). Aucune modification de code
-  n'est nécessaire.
-- **Maquette.** `maquette_widget_APTIO.html` n'était pas disponible au moment du
-  développement. La mise en page a été construite à partir des tokens DA du §7 du
-  PRD (crème `#F7F2EA`, anthracite `#1E2933`, marine `#14304A`, brume `#D5DBDF`,
-  Manrope / Inter, codes couleur d'état). Si la maquette diffère sur un point,
-  l'ajustement se fait dans [`app/globals.css`](app/globals.css), où tous les tokens
-  sont regroupés en tête de fichier.
+- **Logo.** `public/logo-bioxa.jpg` est le logo officiel, extrait tel quel de la
+  maquette (il y était embarqué en base64). Il a un **fond noir opaque** : sur la
+  réserve blanche de l'en-tête, il apparaît donc comme un petit rectangle sombre,
+  exactement comme dans la maquette. Le §7 du PRD demandant un logo « détouré »,
+  vous voudrez peut-être fournir un PNG à fond transparent — voir
+  [`public/LISEZ-MOI-logo.md`](public/LISEZ-MOI-logo.md).
 - **Conformité.** Lancer les DPA Supabase et Vercel, et tracer le choix
   d'hébergement cloud dans la cartographie des traitements (§5 et §10 du PRD).
 
