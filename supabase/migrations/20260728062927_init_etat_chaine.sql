@@ -1,6 +1,10 @@
 -- ═══════════════════════════════════════════════════════════════════════════
---  Widget « État de la chaîne APTIO » · schéma Supabase (§8 du PRD v0.2)
---  À exécuter une fois dans le SQL Editor du projet Supabase (région eu-central-1).
+--  Migration initiale · table `etat_chaine`, RLS et Realtime (§8 du PRD v0.2)
+--
+--  Baseline : reprise du script `supabase/schema.sql` appliqué à la main dans
+--  le SQL Editor lors de la mise en service du projet (commit 08919d6).
+--  Entièrement idempotente, donc rejouable sans risque sur la base déjà
+--  provisionnée comme sur une base neuve (`supabase db reset`, préproduction).
 -- ═══════════════════════════════════════════════════════════════════════════
 
 create table if not exists public.etat_chaine (
@@ -8,7 +12,9 @@ create table if not exists public.etat_chaine (
   trafic text not null default 'normal'
     check (trafic in ('normal','retard','retard_important')),
   analyses_toutes_disponibles boolean not null default true,
-  -- [{ "analyse": "...", "commentaire": "..." }]
+  -- [{ "analyse": "...", "reprise": "...", "commentaire": "..." }]
+  -- `reprise` est arrivée après la mise en service : les lignes publiées avant
+  -- ne la portent pas, `normaliserEtat()` (lib/types.ts) retombe sur ''.
   analyses_indisponibles jsonb not null default '[]'::jsonb,
   message text default '',
   maj_le timestamptz not null default now(),
