@@ -65,9 +65,16 @@ jamais utilisée.
 
 Créez un projet Supabase **en région `eu-central-1` (Francfort)** — exigence §5 du PRD.
 
-Dans le SQL Editor, exécutez le contenu de [`supabase/schema.sql`](supabase/schema.sql).
-Il crée la table `etat_chaine` (une seule ligne, `id = 1`), active la RLS avec la
-seule policy de lecture, et ajoute la table à la publication Realtime.
+Le schéma est versionné dans [`supabase/migrations/`](supabase/migrations). Appliquez-le
+soit avec la CLI Supabase (`supabase link --project-ref <ref>` puis `supabase db push`),
+soit en collant le contenu des migrations, dans l'ordre des noms de fichiers, dans le
+SQL Editor. La migration initiale crée la table `etat_chaine` (une seule ligne, `id = 1`),
+active la RLS avec la seule policy de lecture, et ajoute la table à la publication Realtime.
+
+Les migrations sont écrites de façon idempotente : les rejouer sur une base déjà
+provisionnée ne casse rien. Toute évolution ultérieure du schéma passe par un nouveau
+fichier `supabase/migrations/<horodatage>_<intitule>.sql` — jamais par une modification
+d'un fichier déjà appliqué.
 
 ### 2. Variables d'environnement
 
@@ -222,7 +229,7 @@ lib/
   types.ts                  Modèle de données et présentation des états
   format.ts                 Horodatage JJ/MM/AAAA HH:MM, fuseau Europe/Paris
 middleware.ts               Rafraîchissement de session sur /pilote et /api/etat
-supabase/schema.sql         Table, RLS et Realtime
+supabase/migrations/        Schéma versionné : table, RLS et Realtime
 ```
 
 ---
