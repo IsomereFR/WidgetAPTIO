@@ -1,0 +1,19 @@
+# Tout ce qui n'a rien à faire dans le contexte de build.
+node_modules
+.next
+.git
+.github
+.vercel
+npm-debug.log*
+*.tsbuildinfo
+next-env.d.ts
+
+# Secrets : jamais dans une image.
+.env
+.env.local
+.env*.local
+
+# Documentation et maquettes : sans effet sur le build.
+docs
+*.md
+!public/*.md
