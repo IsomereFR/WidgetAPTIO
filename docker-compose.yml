@@ -1,0 +1,59 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  Widget « État de la chaîne APTIO » — application seule.
+#
+#  Ce fichier ne décrit QUE le widget. La base (Supabase auto-hébergé, ou
+#  PostgreSQL + PostgREST) est un service distinct, monté à part : la mêler
+#  ici reviendrait à lier le cycle de vie des données à celui d'une application
+#  que l'on redéploie à chaque correctif.
+#
+#  Procédure complète : docs/HEBERGEMENT-LOCAL.md
+#
+#  Démarrage :
+#    cp .env.docker.example .env      # puis renseigner les valeurs
+#    docker compose up -d --build
+# ═══════════════════════════════════════════════════════════════════════════
+
+services:
+  widget:
+    build:
+      context: .
+      # Variables NEXT_PUBLIC_ : figées dans le JavaScript au moment du BUILD.
+      # Les modifier impose `docker compose up -d --build`, pas un simple restart.
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_SITE_LIBELLE: ${NEXT_PUBLIC_SITE_LIBELLE:-Site : BEZANNES}
+        NEXT_PUBLIC_SEUIL_PERIME_HEURES: ${NEXT_PUBLIC_SEUIL_PERIME_HEURES:-12}
+    image: widget-aptio:local
+    container_name: widget-aptio
+    restart: unless-stopped
+
+    environment:
+      # Secrets serveur : lus au DÉMARRAGE, jamais inscrits dans l'image.
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?clé service_role requise}
+      ACCES_PILOTE: ${ACCES_PILOTE:-pin}
+      PILOTE_PIN: ${PILOTE_PIN:-}
+      PILOTE_EMAILS: ${PILOTE_EMAILS:-}
+      # Répété ici pour le rendu côté serveur (page de lecture, route d'écriture).
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      TZ: Europe/Paris
+
+    # Exposé sur la boucle locale uniquement : c'est le reverse proxy (nginx,
+    # Traefik…) qui publie le service sur le réseau, avec TLS. Pour un essai
+    # direct sans proxy, remplacer par « 3000:3000 ».
+    ports:
+      - '127.0.0.1:3000:3000'
+
+    # Durcissement : l'application n'écrit rien sur son disque.
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '5'

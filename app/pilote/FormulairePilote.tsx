@@ -14,6 +14,7 @@ import {
   type EtatChaine,
   type Trafic,
 } from '@/lib/types'
+import { BandeauMessage, CarteAnalyses, CarteStatut } from '../composants/BlocEtat'
 import Entete from '../composants/Entete'
 
 type ModeAcces = 'auth' | 'pin'
@@ -49,6 +50,12 @@ export default function FormulairePilote({
   const [redirection, setRedirection] = useState(false)
   const [retour, setRetour] = useState<{ type: 'succes' | 'erreur'; texte: string } | null>(null)
   const [dernierePublication, setDernierePublication] = useState(etatInitial.maj_le)
+  /**
+   * Publication concurrente détectée par le serveur (409). Tant qu'elle n'est
+   * pas levée, republier écraserait l'annonce d'un autre poste.
+   */
+  const [conflit, setConflit] = useState<{ maj_le: string; maj_par: string } | null>(null)
+  const [apercuVisible, setApercuVisible] = useState(false)
 
   // ── Accès : PIN ───────────────────────────────────────────────────────────
   const [pin, setPin] = useState('')
@@ -146,11 +153,74 @@ export default function FormulairePilote({
     })
   }
 
+  /**
+   * L'ordre de la liste est l'ordre d'affichage pour tout le laboratoire.
+   * Sans moyen de le changer, remonter une analyse critique au-dessus d'une
+   * autre obligeait à retaper les deux lignes.
+   */
+  const deplacerAnalyse = (index: number, sens: -1 | 1) => {
+    setAnalyses((precedent) => {
+      const cible = index + sens
+      if (cible < 0 || cible >= precedent.length) return precedent
+      const copie = [...precedent]
+      ;[copie[index], copie[cible]] = [copie[cible], copie[index]]
+      return copie
+    })
+  }
+
+  // ── Brouillon non publié ─────────────────────────────────────────────────
+  // Le formulaire est pré-rempli : rien ne distingue visuellement « ce qui est
+  // affiché dans le laboratoire » de « ce que je viens de taper ». On compare
+  // donc la saisie à l'état publié, et on le dit.
+  const empreinte = (
+    valeurs: Pick<EtatChaine, 'trafic' | 'analyses_toutes_disponibles' | 'message'> & {
+      analyses: AnalyseIndisponible[]
+    },
+  ) =>
+    JSON.stringify({
+      trafic: valeurs.trafic,
+      toutes: valeurs.analyses_toutes_disponibles,
+      // Quand tout est disponible, la liste est ignorée à la publication :
+      // la neutraliser ici évite de signaler un « brouillon » invisible.
+      analyses: valeurs.analyses_toutes_disponibles ? [] : valeurs.analyses,
+      message: valeurs.message.trim(),
+    })
+
+  const [empreintePubliee, setEmpreintePubliee] = useState(() =>
+    empreinte({
+      trafic: etatInitial.trafic,
+      analyses_toutes_disponibles: etatInitial.analyses_toutes_disponibles,
+      analyses: etatInitial.analyses_indisponibles,
+      message: etatInitial.message,
+    }),
+  )
+
+  const brouillonModifie =
+    empreinte({
+      trafic,
+      analyses_toutes_disponibles: toutesDisponibles,
+      analyses,
+      message,
+    }) !== empreintePubliee
+
+  // Fermer l'onglet en croyant avoir publié est l'erreur la plus coûteuse de
+  // ce formulaire : le laboratoire continue alors d'afficher l'état précédent.
+  useEffect(() => {
+    if (!brouillonModifie || redirection) return
+    const avertir = (evenement: BeforeUnloadEvent) => {
+      evenement.preventDefault()
+      evenement.returnValue = ''
+    }
+    window.addEventListener('beforeunload', avertir)
+    return () => window.removeEventListener('beforeunload', avertir)
+  }, [brouillonModifie, redirection])
+
   // ── Publication vers la route serveur ────────────────────────────────────
   const publier = async (evenement: FormEvent) => {
     evenement.preventDefault()
     setEnvoiEnCours(true)
     setRetour(null)
+    setConflit(null)
 
     const entetes: Record<string, string> = { 'Content-Type': 'application/json' }
     if (mode === 'pin' && pin) entetes['x-pilote-pin'] = pin
@@ -165,6 +235,9 @@ export default function FormulairePilote({
           analyses_indisponibles: toutesDisponibles ? [] : analyses,
           message,
           maj_par: mode === 'pin' ? auteur : undefined,
+          // État sur lequel ce formulaire a travaillé : permet au serveur de
+          // refuser l'écrasement d'une publication faite entre-temps.
+          maj_le_connu: dernierePublication || undefined,
         }),
       })
 
@@ -176,6 +249,12 @@ export default function FormulairePilote({
           window.sessionStorage.removeItem(CLE_PIN_SESSION)
           setPinValide(false)
         }
+        if (reponse.status === 409 && charge?.conflit) {
+          setConflit({
+            maj_le: String(charge.conflit.maj_le ?? ''),
+            maj_par: String(charge.conflit.maj_par ?? ''),
+          })
+        }
         setRetour({
           type: 'erreur',
           texte: charge?.erreur || `Publication refusée (code ${reponse.status}).`,
@@ -186,6 +265,15 @@ export default function FormulairePilote({
 
       if (mode === 'pin') window.sessionStorage.setItem(CLE_PIN_SESSION, pin)
       setDernierePublication(charge?.etat?.maj_le || '')
+      // La saisie devient la référence : plus aucun « brouillon non publié ».
+      setEmpreintePubliee(
+        empreinte({
+          trafic,
+          analyses_toutes_disponibles: toutesDisponibles,
+          analyses,
+          message,
+        }),
+      )
       setRetour({
         type: 'succes',
         texte: 'État publié. Redirection vers la page de lecture…',
@@ -316,13 +404,33 @@ export default function FormulairePilote({
 
   const horodatage = formaterHorodatage(dernierePublication)
 
+  // Aperçu : on applique EXACTEMENT les mêmes règles que la route d'écriture —
+  // lignes vides écartées, liste neutralisée si tout est disponible. Un aperçu
+  // qui montrerait des lignes vides annoncerait un affichage qui n'existera pas.
+  const analysesApercu = toutesDisponibles
+    ? []
+    : analyses.filter(
+        (entree) =>
+          entree.analyse.trim() !== '' ||
+          entree.reprise.trim() !== '' ||
+          entree.commentaire.trim() !== '',
+      )
+  const toutesDisponiblesApercu = toutesDisponibles || analysesApercu.length === 0
+
   return (
     <Enveloppe>
       <div className="pilote-entete">
         <h2 className="pilote-titre">Publier l&apos;état de la chaîne</h2>
-        <Link href="/" className="lien-lecture">
-          Voir la page de lecture →
-        </Link>
+        <div className="pilote-entete-actions">
+          {brouillonModifie ? (
+            <span className="badge-brouillon" role="status">
+              Modifications non publiées
+            </span>
+          ) : null}
+          <Link href="/" className="lien-lecture">
+            Voir la page de lecture →
+          </Link>
+        </div>
       </div>
 
       {mode === 'auth' && session?.user?.email ? (
@@ -408,14 +516,38 @@ export default function FormulairePilote({
               {analyses.map((entree, index) => (
                 <div className="ligne-analyse" key={index}>
                   <div className="ligne-analyse-entete">
-                    <span className="ligne-analyse-numero">Analyse {index + 1}</span>
-                    <button
-                      type="button"
-                      className="btn btn-retrait"
-                      onClick={() => retirerAnalyse(index)}
-                    >
-                      − Retirer
-                    </button>
+                    <span className="ligne-analyse-numero">
+                      Analyse {index + 1} sur {analyses.length}
+                    </span>
+                    <div className="ligne-analyse-outils">
+                      <button
+                        type="button"
+                        className="btn btn-ordre"
+                        onClick={() => deplacerAnalyse(index, -1)}
+                        disabled={index === 0}
+                        aria-label={`Remonter l'analyse ${index + 1}`}
+                        title="Remonter"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-ordre"
+                        onClick={() => deplacerAnalyse(index, 1)}
+                        disabled={index === analyses.length - 1}
+                        aria-label={`Descendre l'analyse ${index + 1}`}
+                        title="Descendre"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-retrait"
+                        onClick={() => retirerAnalyse(index)}
+                      >
+                        − Retirer
+                      </button>
+                    </div>
                   </div>
 
                   <label className="champ">
@@ -526,6 +658,39 @@ export default function FormulairePilote({
           </section>
         ) : null}
 
+        {/* ── Aperçu ──
+            Le pilote publie pour tout le laboratoire sans jamais voir le
+            résultat avant l'envoi. L'aperçu réutilise les composants de la page
+            de lecture : ce qui s'affiche ici est ce qui s'affichera là-bas. */}
+        <section className="card carte-apercu">
+          <div className="apercu-entete">
+            <h2 style={{ marginBottom: 0 }}>
+              <span className="ic" aria-hidden="true" />
+              Aperçu
+            </h2>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setApercuVisible((precedent) => !precedent)}
+              aria-expanded={apercuVisible}
+            >
+              {apercuVisible ? 'Masquer' : 'Voir ce que verront les services'}
+            </button>
+          </div>
+
+          {apercuVisible ? (
+            <div className="apercu-scene" aria-label="Aperçu de la page de lecture">
+              <CarteStatut presentation={PRESENTATION_TRAFIC[trafic]} />
+              <CarteAnalyses
+                etatDisponible
+                toutesDisponibles={toutesDisponiblesApercu}
+                analyses={analysesApercu}
+              />
+              {message.trim() ? <BandeauMessage message={message} /> : null}
+            </div>
+          ) : null}
+        </section>
+
         {/* ── Publication ── */}
         <section className="card">
           <div className="actions-publication">
@@ -541,7 +706,30 @@ export default function FormulairePilote({
             ) : null}
           </div>
 
-          {retour ? (
+          {/* Conflit : message dédié, avec la sortie de secours. Un simple
+              « publication refusée » laisserait le pilote sans savoir quoi faire. */}
+          {conflit ? (
+            <div className="encart encart-erreur" style={{ marginTop: 16 }} role="alert">
+              <span className="ic" aria-hidden="true" />
+              <span>
+                <strong>Publication interrompue : un autre poste a publié entre-temps</strong>
+                <br />
+                État en ligne depuis {formaterHorodatage(conflit.maj_le) || 'un instant'}
+                {conflit.maj_par ? ` (${conflit.maj_par})` : ''}. Votre saisie n&apos;a pas été
+                enregistrée, pour ne pas effacer cette annonce. Rechargez pour repartir de
+                l&apos;état courant, puis ressaisissez vos modifications.
+                <br />
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ marginTop: 10 }}
+                  onClick={() => window.location.reload()}
+                >
+                  Recharger l&apos;état courant
+                </button>
+              </span>
+            </div>
+          ) : retour ? (
             <div
               className={`encart ${retour.type === 'succes' ? 'encart-succes' : 'encart-erreur'}`}
               style={{ marginTop: 16 }}

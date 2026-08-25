@@ -228,7 +228,11 @@ header.top {
   font-size: 44px;
   color: var(--marine);
   letter-spacing: -0.02em;
-  line-height: 1;
+  /* La maquette pose 1, mais elle était saisie sans accents. Avec « État »,
+     l'accent dépasse de la boîte de ligne et vient buter contre le libellé
+     au-dessus — d'autant plus visiblement que le corps est grand (mode mural,
+     écran de couloir). 1.08 suffit à le loger sans creuser l'interligne. */
+  line-height: 1.08;
 }
 
 .status-text .desc {
@@ -859,5 +863,222 @@ body {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Ajouts — fraîcheur de l'information, mode mural, outils du formulaire.
+   Même vocabulaire visuel que la maquette : cartes 18 px, bordures brume,
+   pastilles d'état, boutons pilule.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Compteur d'analyses indisponibles ────────────────────────────────────── */
+
+.compteur-indispo {
+  font-family: var(--font-corps);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--terracotta);
+  background: color-mix(in srgb, var(--terracotta) 10%, var(--blanc));
+  border: 1px solid color-mix(in srgb, var(--terracotta) 30%, transparent);
+  border-radius: 999px;
+  padding: 3px 10px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* ── Ancienneté de la dernière publication ────────────────────────────────── */
+
+.anciennete {
+  margin-left: 8px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--blanc);
+  border: 1px solid var(--brume);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gris-etiquette);
+  white-space: nowrap;
+}
+
+/* Alerte de péremption : l'ambre du message libre, pour rester dans le même
+   registre « à lire, sans être une panne ». */
+.encart-perime {
+  margin-bottom: 20px;
+}
+
+/* ── Arrivée d'un nouvel état ─────────────────────────────────────────────── */
+/* Trois pulsations puis retour au calme : assez pour attraper un regard qui
+   passe, assez court pour ne pas devenir un clignotant permanent. */
+
+.hero.vient-de-changer {
+  animation: signal-changement 1.6s ease-out 3;
+}
+
+@keyframes signal-changement {
+  0% {
+    box-shadow: 0 0 0 0 var(--state-halo, rgba(111, 144, 128, 0.14));
+  }
+  60% {
+    box-shadow: 0 0 0 12px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* ── Mode mural ───────────────────────────────────────────────────────────── */
+
+.bouton-mural {
+  cursor: pointer;
+  font-family: var(--font-corps);
+}
+
+.bouton-mural[aria-pressed='true'] {
+  background: var(--marine);
+  border-color: var(--marine);
+  color: var(--blanc);
+}
+
+/* En mode mural, la page n'est plus consultée : elle est regardée de loin.
+   On agrandit, et on retire ce qui ne s'adresse pas à un passant. */
+html.mural body {
+  padding: clamp(20px, 3vh, 48px) clamp(20px, 3vw, 56px);
+}
+
+html.mural .wrap {
+  max-width: 1400px;
+}
+
+html.mural .titles h1 {
+  font-size: clamp(26px, 2.4vw, 42px);
+}
+
+html.mural .status-text .state {
+  font-size: clamp(44px, 6.5vw, 108px);
+}
+
+html.mural .status-text .desc {
+  font-size: clamp(15px, 1.5vw, 26px);
+}
+
+html.mural .status-dot {
+  width: clamp(38px, 4vw, 76px);
+  height: clamp(38px, 4vw, 76px);
+}
+
+html.mural .all-ok .txt strong,
+html.mural .indispo .name {
+  font-size: clamp(18px, 1.7vw, 30px);
+}
+
+html.mural .all-ok .txt span,
+html.mural .indispo .note,
+html.mural .reprise-valeur,
+html.mural .msg {
+  font-size: clamp(14px, 1.2vw, 21px);
+}
+
+html.mural .compteur-indispo {
+  font-size: clamp(12px, 1vw, 18px);
+}
+
+/* Le lien pilote et la note de gouvernance n'ont pas de destinataire sur un
+   écran de couloir : personne ne clique dessus, ils ne font qu'occuper l'espace. */
+html.mural .lien-espace-pilote,
+html.mural footer.foot .note {
+  display: none;
+}
+
+/* ── Formulaire pilote : en-tête et brouillon ─────────────────────────────── */
+
+.pilote-entete-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.badge-brouillon {
+  font-family: var(--font-corps);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6d4c14;
+  background: rgba(215, 162, 74, 0.14);
+  border: 1px solid rgba(215, 162, 74, 0.45);
+  border-radius: 999px;
+  padding: 4px 11px;
+  white-space: nowrap;
+}
+
+/* ── Outils de ligne d'analyse ────────────────────────────────────────────── */
+
+.ligne-analyse-outils {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-ordre {
+  padding: 4px 11px;
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--gris-corps);
+}
+
+.btn-ordre:disabled {
+  opacity: 0.3;
+}
+
+/* ── Aperçu ───────────────────────────────────────────────────────────────── */
+
+.apercu-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* Fond crème : l'aperçu est ainsi visiblement « une autre page », et non un
+   nouveau bloc du formulaire que l'on pourrait croire éditable. */
+.apercu-scene {
+  margin-top: 18px;
+  padding: 18px;
+  background: var(--creme);
+  border: 1px dashed var(--brume);
+  border-radius: 14px;
+}
+
+.apercu-scene .hero,
+.apercu-scene .card,
+.apercu-scene .msg {
+  margin-bottom: 14px;
+}
+
+.apercu-scene > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Réduction d'échelle : l'aperçu doit tenir dans la page sans repousser le
+   bouton « Publier » hors de l'écran. */
+.apercu-scene .status-text .state {
+  font-size: clamp(1.5rem, 1rem + 2.4vw, 32px);
+}
+
+.apercu-scene .hero {
+  padding: clamp(16px, 0.8rem + 1.6vw, 24px);
+}
+
+@media (max-width: 560px) {
+  .ligne-analyse-entete {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .compteur-indispo {
+    margin-left: 0;
   }
 }

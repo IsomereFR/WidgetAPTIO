@@ -5,7 +5,15 @@ mis à jour par le pilote de chaîne et consultable en lecture seule par tout le
 laboratoire, via **deux liens distincts**.
 
 Implémentation du PRD v0.2 (`PRD_Widget_Etat_Chaine_APTIO_v0.2.md`).
-Pile : **Next.js (App Router) + Supabase**, déployable sur **Vercel**.
+Pile : **Next.js (App Router) + Supabase**, déployable sur **Vercel** ou sur
+**l'infrastructure interne** (Docker).
+
+> **Reprise de l'hébergement en interne**
+> - [`docs/HEBERGEMENT-LOCAL.md`](docs/HEBERGEMENT-LOCAL.md) — dossier technique
+>   destiné à la DSI : architecture, dépendances réelles, installation Docker,
+>   exploitation, recette de validation.
+> - [`docs/REMISE-DSI.md`](docs/REMISE-DSI.md) — marche à suivre côté
+>   laboratoire pour transmettre le code et les secrets.
 
 ---
 
@@ -36,6 +44,36 @@ soit un sous-domaine BIOXA si vous en branchez un (§9.3 du PRD).
   courant — trois boutons de trafic exclusifs, bascule « toutes disponibles » /
   « certaines indisponibles » avec liste éditable, message optionnel.
 - **Route serveur** (`/api/etat`) : seul chemin par lequel l'état peut être écrit.
+
+### Fraîcheur et lisibilité de l'information
+
+Un écran mural affiche la dernière chose publiée, indéfiniment. Plusieurs
+dispositifs empêchent une information périmée de se lire comme une information
+sûre :
+
+- **Ancienneté affichée** à côté de l'horodatage (« il y a 4 min », « hier »), et
+  **bandeau d'alerte** au-delà de `NEXT_PUBLIC_SEUIL_PERIME_HEURES` (12 h par
+  défaut) : « État non confirmé depuis plus de 12 h ».
+- **Jamais de vert par défaut** : base injoignable ⇒ « État indisponible », en gris.
+- **Titre d'onglet et favicon** portent la couleur de l'état : l'onglet laissé
+  ouvert en arrière-plan devient lui-même un indicateur.
+- **Mise en évidence** de la carte à l'arrivée d'un nouvel état, trois pulsations.
+- **Compteur** d'analyses indisponibles dans le titre de la carte.
+- **Mode mural** : plein écran, corps de texte agrandis, écran maintenu allumé
+  (Wake Lock — nécessite HTTPS ou `localhost`), commandes masquées.
+
+### Garde-fous du formulaire pilote
+
+- **Aperçu** avant publication, rendu avec les composants **de la page de
+  lecture** : ce qui s'affiche dans l'aperçu est ce que verront les services.
+- **Garde-fou de concurrence** : si un autre poste a publié pendant la saisie,
+  la publication est refusée (`409`) plutôt que d'écraser silencieusement — le
+  pilote est invité à recharger l'état courant.
+- **« Modifications non publiées »** signalé dans l'en-tête, et avertissement à
+  la fermeture de l'onglet : fermer en croyant avoir publié est l'erreur la plus
+  coûteuse de ce formulaire.
+- **Réordonnancement** des analyses (↑ / ↓) : l'ordre de la liste est l'ordre
+  d'affichage pour tout le laboratoire.
 
 ---
 
@@ -82,10 +120,17 @@ Project Settings → API).
 | `ACCES_PILOTE` | `pin` (retenu) ou `auth` | Non |
 | `PILOTE_PIN` | Mot de passe unique (mode `pin`) | **Oui** |
 | `PILOTE_EMAILS` | Adresses autorisées (mode `auth`) | Non |
+| `NEXT_PUBLIC_SITE_LIBELLE` | Sous-titre de l'en-tête (défaut : `Site : BEZANNES`) | Non |
+| `NEXT_PUBLIC_SEUIL_PERIME_HEURES` | Seuil d'alerte de péremption (défaut : `12`) | Non |
 
 > Le PRD nomme ces variables `SUPABASE_URL` / `SUPABASE_ANON_KEY`. Elles portent
 > ici le préfixe `NEXT_PUBLIC_` imposé par Next.js pour les valeurs que le
 > navigateur doit lire — mêmes valeurs, nom conforme au framework.
+
+> ⚠️ Les variables `NEXT_PUBLIC_` sont **figées au moment du build** : Next.js
+> remplace leur nom par leur valeur dans le JavaScript envoyé au navigateur. Les
+> modifier impose de **reconstruire** (`npm run build`, ou
+> `docker compose up -d --build`) — un simple redémarrage n'a aucun effet.
 
 ### 3. Lancement local
 
@@ -171,6 +216,24 @@ Pour un sous-domaine BIOXA (`chaine.bioxa.fr`), passez par Settings → Domains.
 
 ---
 
+## Déploiement en interne (Docker)
+
+```bash
+cp .env.docker.example .env    # puis renseigner les valeurs
+docker compose up -d --build
+```
+
+L'application écoute alors sur `127.0.0.1:3000` ; la publication sur le réseau
+passe par un reverse proxy, qui doit **relayer le WebSocket** (sans quoi le
+temps réel bascule sur une interrogation toutes les 15 s, ce que la page
+signale honnêtement).
+
+La base — Supabase auto-hébergé, ou PostgreSQL après adaptation — est un service
+distinct : [`docs/HEBERGEMENT-LOCAL.md`](docs/HEBERGEMENT-LOCAL.md) détaille les
+deux options, l'installation, l'exploitation et la recette de validation.
+
+---
+
 ## Fidélité à la maquette
 
 La page de lecture reprend `maquette_widget_APTIO.html` à l'identique : structure
@@ -191,14 +254,13 @@ visuel (cartes 18 px, bordures brume, pastilles d'état, boutons pilule).
 
 ## À faire avant diffusion
 
-- **Logo.** `public/logo-bioxa.jpg` est le logo officiel, extrait tel quel de la
-  maquette (il y était embarqué en base64). Il a un **fond noir opaque** : sur la
-  réserve blanche de l'en-tête, il apparaît donc comme un petit rectangle sombre,
-  exactement comme dans la maquette. Le §7 du PRD demandant un logo « détouré »,
-  vous voudrez peut-être fournir un PNG à fond transparent — voir
-  [`public/LISEZ-MOI-logo.md`](public/LISEZ-MOI-logo.md).
-- **Conformité.** Lancer les DPA Supabase et Vercel, et tracer le choix
-  d'hébergement cloud dans la cartographie des traitements (§5 et §10 du PRD).
+- **Logo.** `public/logo-bioxa.png` est le logo officiel, détouré et posé sur
+  fond transparent, conformément au §7 du PRD — voir
+  [`public/LISEZ-MOI-logo.md`](public/LISEZ-MOI-logo.md) pour le remplacer.
+- **Conformité.** En hébergement cloud : lancer les DPA Supabase et Vercel, et
+  tracer le choix dans la cartographie des traitements (§5 et §10 du PRD). En
+  hébergement interne, ces deux points **disparaissent** — c'est le principal
+  bénéfice de conformité de la reprise ; la cartographie reste à mettre à jour.
 
 ---
 
@@ -206,23 +268,32 @@ visuel (cartes 18 px, bordures brume, pastilles d'état, boutons pilule).
 
 ```
 app/
-  page.tsx                  Lien LECTURE : chargement initial côté serveur
-  AffichageEtat.tsx         Rendu + abonnement Realtime (client, clé anon)
+  page.tsx                  Lien LECTURE : chargement serveur, titre et favicon d'état
+  AffichageEtat.tsx         Rendu + Realtime + repli + fraîcheur + mode mural
   pilote/
     page.tsx                Lien PILOTE : résout le mode d'accès côté serveur
-    FormulairePilote.tsx    Écrans d'accès + formulaire de publication
-  api/etat/route.ts         ÉCRITURE : contrôle d'accès, validation, clé service role
+    FormulairePilote.tsx    Écrans d'accès, formulaire, aperçu, garde-fous
+  api/etat/route.ts         ÉCRITURE : accès, validation, concurrence, service role
   auth/callback/route.ts    Retour du lien magique (mode auth)
-  composants/               En-tête et note de gouvernance
+  composants/
+    BlocEtat.tsx            Blocs partagés page de lecture / aperçu pilote
+    Entete.tsx              En-tête et libellé de site
+    useModeMural.ts         Plein écran, Wake Lock, classe CSS
+    NoteGouvernance.tsx     Rappel §10 du PRD
   globals.css               Tokens DA BIOXA et styles
 lib/
   acces-pilote.ts           Point de bascule auth / pin (serveur uniquement)
   supabase-serveur.ts       Clients serveur, dont service role (server-only)
   supabase-navigateur.ts    Client navigateur, clé anon
-  types.ts                  Modèle de données et présentation des états
-  format.ts                 Horodatage JJ/MM/AAAA HH:MM, fuseau Europe/Paris
+  types.ts                  Modèle de données, présentation des états, favicon
+  format.ts                 Horodatage Europe/Paris, ancienneté, péremption
 middleware.ts               Rafraîchissement de session sur /pilote et /api/etat
 supabase/schema.sql         Table, RLS et Realtime
+Dockerfile                  Image de production (dépendances / build / exécution)
+docker-compose.yml          Service applicatif, pour l'hébergement interne
+docs/
+  HEBERGEMENT-LOCAL.md      Dossier technique DSI
+  REMISE-DSI.md             Marche à suivre pour la transmission
 ```
 
 ---

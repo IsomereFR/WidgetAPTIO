@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from 'next'
+
+import { faviconPour } from '@/lib/types'
 import { Inter, Manrope } from 'next/font/google'
 
 import './globals.css'
@@ -27,6 +29,9 @@ export const metadata: Metadata = {
   description:
     "Affichage temps réel de l'état de production du plateau technique — site de Bezannes.",
   robots: { index: false, follow: false },
+  // Favicon par défaut (page pilote, pages d'erreur). La page de lecture la
+  // remplace par la couleur de l'état courant, cf. app/page.tsx.
+  icons: { icon: { url: faviconPour('#14304a'), type: 'image/svg+xml' } },
 }
 
 export const viewport: Viewport = {

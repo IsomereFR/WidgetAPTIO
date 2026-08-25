@@ -27,6 +27,14 @@ function texte(valeur: unknown, maximum: number): string {
   return valeur.trim().slice(0, maximum)
 }
 
+/** Égalité de deux horodatages à la milliseconde, quelle que soit leur graphie. */
+function memeInstant(a: string, b: string): boolean {
+  const instantA = new Date(a).getTime()
+  const instantB = new Date(b).getTime()
+  if (Number.isNaN(instantA) || Number.isNaN(instantB)) return false
+  return instantA === instantB
+}
+
 export async function POST(requete: Request) {
   // ── 1. Corps de requête ──────────────────────────────────────────────────
   let corps: unknown
@@ -110,7 +118,7 @@ export async function POST(requete: Request) {
 
   const message = texte(donnees.message, MAX_LONGUEUR_MESSAGE)
 
-  // ── 4. Écriture (clé service role) ───────────────────────────────────────
+  // ── 4. Client d'écriture (clé service role) ──────────────────────────────
   const admin = supabaseAdmin()
   if (!admin) {
     return NextResponse.json(
@@ -119,6 +127,42 @@ export async function POST(requete: Request) {
     )
   }
 
+  // ── 5. Garde-fou de concurrence ──────────────────────────────────────────
+  // Deux postes peuvent tenir la chaîne en même temps. Sans ce contrôle, le
+  // second à publier écrase silencieusement le premier — y compris s'il avait
+  // ouvert le formulaire une heure plus tôt et n'a jamais vu son annonce.
+  //
+  // Le client renvoie l'horodatage de l'état sur lequel il a travaillé. S'il ne
+  // correspond plus à celui en base, on refuse (409) et on rend l'état courant
+  // pour que le pilote arbitre en connaissance de cause.
+  //
+  // Champ facultatif : une requête qui ne le fournit pas (script, appel direct)
+  // conserve l'ancien comportement.
+  const majLeConnu = texte(donnees.maj_le_connu, 64)
+  if (majLeConnu) {
+    const { data: courant } = await admin
+      .from('etat_chaine')
+      .select('maj_le, maj_par')
+      .eq('id', 1)
+      .maybeSingle()
+
+    // Comparaison sur l'instant, jamais sur la chaîne : la base rend
+    // « 2026-08-25T09:12:33.123456+00:00 » là où notre propre réponse rend
+    // « 2026-08-25T09:12:33.123Z ». Deux écritures du même instant, deux
+    // graphies — un test d'égalité textuelle signalerait un faux conflit.
+    if (courant?.maj_le && !memeInstant(courant.maj_le, majLeConnu)) {
+      return NextResponse.json(
+        {
+          erreur:
+            "Un autre poste a publié un état entre-temps. Rechargez la page pour repartir de l'état courant, puis republiez.",
+          conflit: { maj_le: courant.maj_le, maj_par: courant.maj_par ?? '' },
+        },
+        { status: 409 },
+      )
+    }
+  }
+
+  // ── 6. Écriture ──────────────────────────────────────────────────────────
   // L'horodatage est posé par le serveur : l'heure du poste client n'est jamais utilisée.
   const majLe = new Date().toISOString()
 
