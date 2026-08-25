@@ -1,12 +1,24 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-import { formaterHorodatage } from '@/lib/format'
+import {
+  SEUIL_PERIME_HEURES,
+  ancienneteRelative,
+  estPerime,
+  formaterHorodatage,
+} from '@/lib/format'
 import { supabaseNavigateur } from '@/lib/supabase-navigateur'
-import { normaliserEtat, PRESENTATION_TRAFIC, type EtatChaine } from '@/lib/types'
+import { faviconPour, normaliserEtat, PRESENTATION_TRAFIC, type EtatChaine } from '@/lib/types'
+import {
+  BandeauMessage,
+  CarteAnalyses,
+  CarteStatut,
+  PRESENTATION_INDISPONIBLE,
+} from './composants/BlocEtat'
 import Entete from './composants/Entete'
+import { useModeMural } from './composants/useModeMural'
 import { TEXTE_GOUVERNANCE } from './composants/NoteGouvernance'
 
 /**
@@ -16,10 +28,6 @@ import { TEXTE_GOUVERNANCE } from './composants/NoteGouvernance'
  * L'état initial est rendu côté serveur (affichage immédiat), puis ce composant
  * s'abonne aux changements de `etat_chaine` via Supabase Realtime avec la clé anon.
  * Aucun rechargement, aucun polling.
- */
-/**
- * État affiché tant qu'aucune donnée n'a pu être lue. Neutre, jamais vert :
- * une base injoignable ne doit pas se lire comme « tout va bien ».
  */
 /**
  * État de la liaison temps réel. Trois valeurs distinctes, parce que
@@ -44,13 +52,8 @@ const PRESENTATION_LIAISON: Record<EtatLiaison, { libelle: string; titre: string
   },
 }
 
-const PRESENTATION_INDISPONIBLE = {
-  libelle: 'État indisponible',
-  descriptif:
-    "Le service d'affichage est momentanément injoignable. Cette page ne reflète pas l'état réel de la chaîne : renseignez-vous auprès du poste pilote.",
-  couleur: '#98a0a8',
-  halo: 'rgba(152,160,168,.16)',
-}
+/** Durée de la mise en évidence qui suit l'arrivée d'un nouvel état. */
+const DUREE_SIGNAL_MS = 5000
 
 export default function AffichageEtat({
   etatInitial,
@@ -64,6 +67,17 @@ export default function AffichageEtat({
   const [etat, setEtat] = useState<EtatChaine>(etatInitial)
   const [etatDisponible, setEtatDisponible] = useState(etatDisponibleInitial)
   const [liaison, setLiaison] = useState<EtatLiaison>('connexion')
+
+  /**
+   * Instant de référence pour l'ancienneté. `null` au premier rendu : le
+   * serveur et le navigateur ne partagent pas la même horloge, calculer
+   * l'ancienneté des deux côtés produirait une divergence d'hydratation.
+   * L'information n'apparaît donc qu'après montage.
+   */
+  const [maintenant, setMaintenant] = useState<number | null>(null)
+  const [signaleChangement, setSignaleChangement] = useState(false)
+
+  const mural = useModeMural()
 
   useEffect(() => {
     const supabase = supabaseNavigateur()
@@ -166,10 +180,54 @@ export default function AffichageEtat({
     }
   }, [liaison])
 
+  // Horloge de l'ancienneté. La minute est la plus petite unité affichée :
+  // un rafraîchissement toutes les 30 s suffit à ne jamais montrer un écart
+  // d'une minute entière.
+  useEffect(() => {
+    setMaintenant(Date.now())
+    const intervalle = window.setInterval(() => setMaintenant(Date.now()), 30000)
+    return () => window.clearInterval(intervalle)
+  }, [])
+
+  // Mise en évidence d'un état qui vient d'arriver. On compare l'horodatage
+  // plutôt que l'objet : c'est le seul champ que le serveur garantit différent
+  // à chaque publication, y compris quand le pilote republie le même trafic.
+  const horodatagePrecedent = useRef(etatInitial.maj_le)
+  useEffect(() => {
+    if (etat.maj_le === horodatagePrecedent.current) return
+    horodatagePrecedent.current = etat.maj_le
+
+    setSignaleChangement(true)
+    const delai = window.setTimeout(() => setSignaleChangement(false), DUREE_SIGNAL_MS)
+    return () => window.clearTimeout(delai)
+  }, [etat.maj_le])
+
   const presentation = etatDisponible
     ? PRESENTATION_TRAFIC[etat.trafic]
     : PRESENTATION_INDISPONIBLE
+
+  /**
+   * Titre d'onglet et favicon suivent l'état : l'onglet reste ouvert en
+   * arrière-plan toute la journée, il devient lui-même un indicateur.
+   *
+   * Le titre du PREMIER rendu vient du serveur (`generateMetadata`, app/page.tsx) :
+   * une écriture dans `document.title` au montage serait écrasée par le système
+   * de metadata de Next au moment de l'hydratation. Cet effet ne sert donc qu'aux
+   * changements reçus ensuite en temps réel, une fois l'hydratation terminée.
+   */
+  useEffect(() => {
+    document.title = `${presentation.libelle} · État de la chaîne`
+
+    // Le lien est rendu par le serveur (`generateMetadata`) : on le met à jour,
+    // on n'en ajoute pas un second — deux `rel="icon"` et c'est le dernier du
+    // document qui gagne, donc pas nécessairement le nôtre.
+    const lien = document.querySelector<HTMLLinkElement>("link[rel='icon']")
+    if (lien) lien.href = faviconPour(presentation.couleur)
+  }, [presentation.libelle, presentation.couleur])
+
   const horodatage = formaterHorodatage(etat.maj_le)
+  const anciennete = maintenant === null ? '' : ancienneteRelative(etat.maj_le, maintenant)
+  const perime = maintenant !== null && etatDisponible && estPerime(etat.maj_le, maintenant)
 
   // Une liste vide vaut « toutes disponibles » : on n'affiche jamais un bloc
   // « indisponibles » sans aucune ligne.
@@ -189,7 +247,18 @@ export default function AffichageEtat({
               <span className="dotpulse" aria-hidden="true" />
               {PRESENTATION_LIAISON[liaison].libelle}
             </span>
-            <Link href="/pilote" className="lien-pilote">
+            {mural.disponible ? (
+              <button
+                type="button"
+                className="lien-pilote bouton-mural"
+                onClick={() => void mural.basculer()}
+                aria-pressed={mural.actif}
+                title="Plein écran, texte agrandi et écran maintenu allumé — pour un affichage de couloir"
+              >
+                {mural.actif ? 'Quitter le mode mural' : 'Mode mural'}
+              </button>
+            ) : null}
+            <Link href="/pilote" className="lien-pilote lien-espace-pilote">
               Espace pilote
             </Link>
           </div>
@@ -206,84 +275,37 @@ export default function AffichageEtat({
         </div>
       ) : null}
 
-      {/* ── Carte statut ── */}
-      <section
-        className="hero"
-        aria-live="polite"
-        style={
-          {
-            '--state-color': presentation.couleur,
-            '--state-halo': presentation.halo,
-          } as CSSProperties
-        }
-      >
-        <div className="lbl">Trafic de la chaîne</div>
-        <div className="status-line">
-          <div className="status-dot" aria-hidden="true" />
-          <div className="status-text">
-            <div className="state">{presentation.libelle}</div>
-            <div className="desc">{presentation.descriptif}</div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Carte analyses ── */}
-      <section className="card" aria-live="polite">
-        <h2>
+      {/* ── Alerte de péremption ──
+          Publiée il y a longtemps, une information cesse d'en être une : on le
+          dit, plutôt que de laisser un vert périmé passer pour un vert actuel. */}
+      {perime ? (
+        <div className="encart encart-consigne encart-perime" role="status">
           <span className="ic" aria-hidden="true" />
-          Analyses
-        </h2>
-
-        {!etatDisponible ? (
-          <div className="all-ok">
-            <div className="big-dot" style={{ background: '#98a0a8', boxShadow: 'none' }} aria-hidden="true" />
-            <div className="txt">
-              <strong>Information non disponible</strong>
-              <span>L&apos;état des analyses n&apos;a pas pu être chargé.</span>
-            </div>
-          </div>
-        ) : toutesDisponibles ? (
-          <div className="all-ok">
-            <div className="big-dot" aria-hidden="true" />
-            <div className="txt">
-              <strong>Toutes les analyses disponibles</strong>
-              <span>Aucune indisponibilité signalée sur la chaîne.</span>
-            </div>
-          </div>
-        ) : (
-          <ul className="indispo-list">
-            {etat.analyses_indisponibles.map((entree, index) => (
-              <li className="indispo" key={`${entree.analyse}-${index}`}>
-                <div className="name">
-                  <span className="pin" aria-hidden="true" />
-                  {entree.analyse || 'Analyse non nommée'}
-                </div>
-                {entree.reprise ? (
-                  <div className="reprise">
-                    <span className="reprise-etiquette">Reprise estimée</span>
-                    <span className="reprise-valeur">{entree.reprise}</span>
-                  </div>
-                ) : null}
-                {entree.commentaire ? <div className="note">{entree.commentaire}</div> : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {/* ── Message libre, seulement s'il est renseigné ── */}
-      {etatDisponible && etat.message.trim() ? (
-        <div className="msg" aria-live="polite">
-          <span className="ic" aria-hidden="true" />
-          <div className="texte">{etat.message}</div>
+          <span>
+            État non confirmé depuis plus de {SEUIL_PERIME_HEURES} h
+            {anciennete ? ` (${anciennete})` : ''}. Il peut ne plus refléter la situation
+            réelle : renseignez-vous auprès du poste pilote.
+          </span>
         </div>
       ) : null}
+
+      <CarteStatut presentation={presentation} signaleChangement={signaleChangement} />
+
+      <CarteAnalyses
+        etatDisponible={etatDisponible}
+        toutesDisponibles={toutesDisponibles}
+        analyses={etat.analyses_indisponibles}
+      />
+
+      {/* ── Message libre, seulement s'il est renseigné ── */}
+      {etatDisponible && etat.message.trim() ? <BandeauMessage message={etat.message} /> : null}
 
       {/* ── Pied ── */}
       <footer className="foot">
         {horodatage ? (
           <div className="maj">
             Dernière mise à jour : <strong>{horodatage}</strong>
+            {anciennete ? <span className="anciennete">{anciennete}</span> : null}
             {etat.maj_par ? ` · ${etat.maj_par}` : ''}
           </div>
         ) : (

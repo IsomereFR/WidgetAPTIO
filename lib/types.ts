@@ -110,3 +110,15 @@ export function normaliserEtat(ligne: unknown): EtatChaine {
     maj_par: typeof brut.maj_par === 'string' ? brut.maj_par : '',
   }
 }
+
+/**
+ * Favicon teintée de la couleur d'un état, sous forme de data-URI.
+ *
+ * Le widget vit dans un onglet laissé ouvert en permanence, souvent en
+ * arrière-plan : une pastille colorée dans la barre d'onglets signale un
+ * changement sans qu'il faille revenir sur la page.
+ */
+export function faviconPour(couleur: string): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="${couleur}"/></svg>`
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`
+}
